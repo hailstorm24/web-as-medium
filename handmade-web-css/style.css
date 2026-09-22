@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Crafty+Girls&family=Gaegu:wght@300;400;700&display=swap');
+
+:root {
+  --highlighter: #7bd7ff;
+}
+
+.title {
+    font-family: "Gaegu", sans-serif;
+    font-weight: 700;
+}
+
+.big-text{
+    font-family: "Gaegu", sans-serif;
+    font-weight: 700;
+}
+
+.page-text {
+    color: black;
+    font-family: "Gaegu", sans-serif;
+    font-weight: 300;
+}
+
+.page-text a:link{
+    color:black;
+}
+.page-text a:visited{
+    color:black;
+}
+.page-text a:link:hover {
+    background-color: var(--highlighter);
+}
+
+.nav {
+    color: black;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.nav a:link{
+    color: black;
+    text-decoration: none;
+}
+
+.nav a:visited{
+    color: black;
+    text-decoration: none;
+}
+
+.nav a:hover {
+    background-color: var(--highlighter);
+}
+
+.vertical-menu {
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
+.vertical-menu a {
+    color: black;
+    display: block;
+    padding: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: "Gaegu", sans-serif;
+    font-weight: 400;
+}
+.vertical-menu span:hover{
+    background-color: var(--highlighter);
+}
+
+.vertical-menu a:hover {
+    text-decoration-line: underline;
+    /* background-color: var(--highlighter); */
+}
