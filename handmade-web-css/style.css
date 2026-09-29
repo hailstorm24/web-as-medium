@@ -1,45 +1,65 @@
 @import url('https://fonts.googleapis.com/css2?family=Crafty+Girls&family=Gaegu:wght@300;400;700&display=swap');
 
 :root {
-  --highlighter: #7bd7ff;
-  --highlighter_pink: 
+    --highlighter: #7bd7ff;
+    --highlighter_pink:#f449d3;
+    --dot_gray: #D2D2D2;
 }
 
 ::selection {
-  background-color: #f449d3; /* Changes the background highlight color */
-  color: #ffffff;            /* Changes the text color inside the selection */
+    background-color: var(--highlighter_pink);
+    color: white;
 }
 
 .title {
     font-family: "Gaegu", sans-serif;
     font-weight: 700;
+    line-height: 48px;
 }
 
-.big-text{
+.big-text {
     font-family: "Gaegu", sans-serif;
     font-weight: 700;
+    line-height: 48px;
 }
 
 #page {
     width: 100%;
     height: 100%;
-    padding: 25px;
+    padding: 24px;
     box-sizing: border-box;
-    /* border: 1px solid green */
+}
+
+.menu-text{
+    color: black;
+    font-family: "Gaegu", sans-serif;
+    font-weight: 300;
+    gap: 24px;
+    line-height: 24px;
+    margin-bottom: 24px;
+
 }
 
 .page-text {
     color: black;
     font-family: "Gaegu", sans-serif;
     font-weight: 300;
+    background-image: radial-gradient(circle, var(--dot_gray) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: 0 18px;
+    gap: 24px;
+    line-height: 24px;
+    margin-bottom: 24px;
 }
 
-.page-text a:link{
-    color:black;
+.page-text a:link {
+    color: black;
 }
-.page-text a:visited{
-    color:black;
+
+.page-text a:visited {
+    color: black;
 }
+
 .page-text a:link:hover {
     background-color: var(--highlighter);
 }
@@ -49,12 +69,12 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
-.nav a:link{
+.nav a:link {
     color: black;
     text-decoration: none;
 }
 
-.nav a:visited{
+.nav a:visited {
     color: black;
     text-decoration: none;
 }
@@ -64,8 +84,8 @@
 }
 
 .vertical-menu {
-    margin-left: 50px;
-    margin-right: 50px;
+    margin-left: 48px;
+    margin-right: 48px;
 }
 
 .vertical-menu a {
@@ -76,9 +96,10 @@
     font-weight: bold;
     font-family: "Gaegu", sans-serif;
     font-weight: 400;
-    /* border: solid 1px; */
+    line-height: 24px;
 }
-.vertical-menu span:hover{
+
+.vertical-menu span:hover {
     background-color: var(--highlighter);
     text-decoration-line: underline;
 
