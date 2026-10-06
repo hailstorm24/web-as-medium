@@ -1,0 +1,11 @@
+.button{
+    --speed: 2s;
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    background-color: red;
+    transition: left var(--speed) ease-in-out, top var(--speed) ease-in-out;
+    border-radius: 50%;
+}

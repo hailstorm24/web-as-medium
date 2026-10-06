@@ -28,7 +28,7 @@
 
 .page {
     border: solid var(--border_weight) blue;
-    overflow: hidden;
+    /* overflow: hidden; */
     height: 90vh;
     aspect-ratio: 2/3;
     margin: 0;
