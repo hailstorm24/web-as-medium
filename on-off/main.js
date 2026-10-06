@@ -1,7 +1,9 @@
 function setRandomHexColor(elm) {
     const randomColor = Math.floor(Math.random() * 0xFFFFFF).toString(16);
-    elm.style.backgroundColor = `#${randomColor.padStart(6, '0')}`;
+    elm.style.setProperty('--color', `#${randomColor.padStart(6, '0')}`);
 };
+
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function setRandomLocation(elm, width, height) {
     let vw = window.innerWidth;
@@ -22,7 +24,32 @@ function splitElement(elm) {
     newElm.style.left = getComputedStyle(elm).getPropertyValue('left');
     newElm.style.top = getComputedStyle(elm).getPropertyValue('top');
     initialize(newElm);
-    document.body.appendChild(newElm);
+    setTimeout(() => {
+        toggle = newElm.querySelector('.toggle input');
+        toggle.checked = false;
+        setRandomHexColor(newElm);
+    }, 1000);
+
+    container = document.getElementById('button-container')
+    container.appendChild(newElm);
+}
+
+function onClick(button) {
+    container = document.getElementById('button-container')
+    originalColor = getComputedStyle(button).getPropertyValue('--color');
+    container.style.backgroundColor = `color-mix(in srgb, ${originalColor} 25%, white)`;
+    toggle = button.querySelector('.toggle input');
+    if (toggle.checked) {
+        setTimeout(() => {
+            setRandomLocation(button, 100, 100);
+            splitElement(button);
+        }, 200);
+        setTimeout(() => {
+            toggle = button.querySelector('.toggle input');
+            toggle.checked = false;
+            setRandomHexColor(button);
+        }, 1000);
+    }
 }
 
 function initialize(button) {
@@ -30,16 +57,14 @@ function initialize(button) {
         setRandomLocation(button, 100, 100);
     });
     button.addEventListener("click", function () {
-        setRandomHexColor(button);
-        splitElement(button);
-        halfSpeed(button);
-        setRandomLocation(button, 100, 100);
+        onClick(button);
     });
 }
 
 document.addEventListener("DOMContentLoaded", (event) => {
-    const buttons = document.querySelectorAll(".button")
+    const buttons = document.querySelectorAll(".toggle")
     buttons.forEach(function (button) {
         initialize(button);
     });
 });
+
