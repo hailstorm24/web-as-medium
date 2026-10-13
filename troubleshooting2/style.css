@@ -1,0 +1,53 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.poster {
+  min-height: 100vh;
+  padding: 32px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  color: black;
+  background-color: #f1ff3b;
+  transition: color 0.3s, background-color 0.3s;
+}
+
+.poster.inverted {
+  color: #f1ff3b;
+  background-color: black;
+}
+
+.counter {
+  margin: 0;
+  font-size: 16px;
+}
+
+.phrase {
+  max-width: 900px;
+  margin: auto 0;
+  font-size: clamp(64px, 12vw, 180px);
+  line-height: 0.85;
+  letter-spacing: -0.06em;
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+}
+
+button {
+  padding: 12px 18px;
+  border: 1px solid currentColor;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
