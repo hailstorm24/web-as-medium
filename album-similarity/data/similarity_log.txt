@@ -1,0 +1,4 @@
+  skipped (only 0 frames): #4 All’s fair in love and poetry...
+signatures for 1341 previews
+same-artist pairs: median neighbour rank 24 of 99 (chance ~50)
+100x100 album matrix -> data/similarity.json

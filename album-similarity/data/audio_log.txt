@@ -1,0 +1,101 @@
+#  1 ROSALÍA - LUX: 15 iTunes previews
+#  2 Taylor Swift - The Life of a Showgirl: 12 iTunes previews
+#  3 Bad Bunny - DeBÍ TiRAR MáS FOToS: 17 iTunes previews
+#  4 Taylor Swift - THE TORTURED POETS DEPARTMENT: 17 iTunes previews
+#  5 Beyoncé - COWBOY CARTER: 27 iTunes previews
+#  6 Ariana Grande - eternal sunshine: 13 iTunes previews
+#  7 Taylor Swift - 1989 (Taylor's Version): 21 iTunes previews
+#  8 Olivia Rodrigo - GUTS: 12 iTunes previews
+#  9 boygenius - the record: 12 iTunes previews
+# 10 Taylor Swift - Midnights: 13 iTunes previews
+# 11 Adele - 30: 12 iTunes previews
+# 12 Taylor Swift - Red (Taylor's Version): 31 iTunes previews
+# 13 Phoebe Bridgers - Lost Weekend: 17 iTunes previews
+# 14 Francisca Valenzuela - MALDITA: 0 iTunes previews
+# 15 Gracie Abrams - Daughter from Hell: 17 iTunes previews
+# 16 Olivia Rodrigo - you seem pretty sad for a girl so in love: 14 iTunes previews
+# 17 Paul McCartney - The Boys of Dungeon Lane: 14 iTunes previews
+# 18 Noah Kahan - The Great Divide: 17 iTunes previews
+# 19 RAYE - THIS MUSIC MAY CONTAIN HOPE.: 17 iTunes previews
+# 20 Neurosis - An Undying Love for a Burning World: 8 iTunes previews
+# 21 BTS - ARIRANG: 14 iTunes previews
+# 22 Cate Le Bon - Michelangelo Dying: 10 iTunes previews
+# 23 Cardi B - AM I THE DRAMA?: 23 iTunes previews
+# 24 Hayley Williams - Ego Death At A Bachelorette Party: 20 iTunes previews
+# 25 Dijon - Baby: 12 iTunes previews
+# 26 Reneé Rapp - BITE ME: 12 iTunes previews
+# 27 Tyler Childers - Snipe Hunter: 13 iTunes previews
+# 28 Lorde - Virgin: 11 iTunes previews
+# 29 Eric Church - Evangeline vs. The Machine: 8 iTunes previews
+# 30 Beyoncé - RENAISSANCE: 16 iTunes previews
+# 31 Lizzo - Special: 13 iTunes previews
+# 32 Bartees Strange - Farm to Table: 10 iTunes previews
+# 33 Spoon - Lucifer on the Sofa: 0 iTunes previews
+# 34 Lucy Dacus - Home Video: 0 iTunes previews
+# 35 Taylor Swift - evermore: 15 iTunes previews
+# 36 Taylor Swift - folklore: 16 iTunes previews
+# 37 Jessie Ware - What's Your Pleasure?: 12 iTunes previews
+# 38 Bob Dylan - Rough and Rowdy Ways: 10 iTunes previews
+# 39 Neil Young - Homegrown: 12 iTunes previews
+# 40 Fiona Apple - Fetch the Bolt Cutters: 13 iTunes previews
+# 41 Bad Bunny - YHLQMDLG: 20 iTunes previews
+# 42 Chuwi - ¡Libertad!: 13 iTunes previews
+# 43 Fontaines D.C. - Dopamine Chamber: 11 iTunes previews
+# 44 Miranda Lambert - Crisco: 12 iTunes previews
+# 45 Godflesh - Decay: 6 iTunes previews
+# 46 Beck - Ride Lonesome: 12 iTunes previews
+# 47 beabadoobee - Pylon: 14 iTunes previews
+# 48 Carly Rae Jepsen - Day and Night: 25 iTunes previews
+# 49 Erykah Badu & The Alchemist - Before the World Blows: 16 iTunes previews
+# 50 Mastodon - Marrow Deep: 12 iTunes previews
+# 51 Weezer - Weezer (Gold Album): 10 iTunes previews
+# 52 Dillom - LA NUEVA VIOLENCIA: 15 iTunes previews
+# 53 Ravyn Lenae - Blue Island: 14 iTunes previews
+# 54 KAROL G - NO ME ARREPIENTO DE SENTIR TANTO: 14 iTunes previews
+# 55 Ariana Grande - petal: 13 iTunes previews
+# 56 Charli xcx - Music, Fashion, Film: 11 iTunes previews
+# 57 Steve Lacy - Oh yeah?: 10 iTunes previews
+# 58 Jack White - Frozen Charlotte: 13 iTunes previews
+# 59 Madonna - CONFESSIONS II: 16 iTunes previews
+# 60 Ryan Beatty - Sweet Fortune: 10 iTunes previews
+# 61 Rolling Stones - Foreign Tongues: 14 iTunes previews
+# 62 Malcolm Todd - Do That Again: 13 iTunes previews
+# 63 The Red Clay Strays - Grateful: 1 iTunes previews
+# 64 Boards of Canada - Inferno: 19 iTunes previews
+# 65 Drake - MAID OF HONOUR: 14 iTunes previews
+# 66 Cola - Cost of Living Adjustment: 11 iTunes previews
+# 67 North West - N0rth4evr: 6 iTunes previews
+# 68 Kacey Musgraves - Middle of Nowhere: 13 iTunes previews
+# 69 Foo Fighters - Your Favorite Toy: 10 iTunes previews
+# 70 Nine Inch Nails & Boys Noize - Nine Inch Noize: 12 iTunes previews
+# 71 Ella Langley - Dandelion: 18 iTunes previews
+# 72 Robyn - Sexistential: 9 iTunes previews
+# 73 Yebba - Jean: 14 iTunes previews
+# 74 Harry Styles - Kiss All The Time. Disco, Occasionally.: 12 iTunes previews
+# 75 Bruno Mars - The Romantic: 9 iTunes previews
+# 76 BLACKPINK - DEADLINE: 5 iTunes previews
+# 77 Hilary Duff - luck… or something: 11 iTunes previews
+# 78 Charli xcx - Wuthering Heights: 12 iTunes previews
+# 79 Lucinda Williams - World's Gone Wrong: 10 iTunes previews
+# 80 De La Soul - Cabin In The Sky: 20 iTunes previews
+# 81 Tems - Love Is a Kingdom: 7 iTunes previews
+# 82 Mavis Staples - Sad and Beautiful World: 10 iTunes previews
+# 83 Snocaps - Snocaps: 13 iTunes previews
+# 84 Florence + the Machine - Everybody Scream: 12 iTunes previews
+# 85 Lily Allen - West End Girl: 14 iTunes previews
+# 86 Monaleo - Who Did The Body: 1 iTunes previews
+# 87 Demi Lovato - It's Not That Deep: 11 iTunes previews
+# 88 They Are Gutting a Body of Water - LOTTO: 0 iTunes previews
+# 89 bar italia - Some Like It Hot: 12 iTunes previews
+# 90 Not for Radio - Melt: 10 iTunes previews
+# 91 Rauw Alejandro - Cosa Nuestra: Capítulo 0: 14 iTunes previews
+# 92 Olivia Dean - The Art of Loving: 12 iTunes previews
+# 93 Zara Larsson - Midnight Sun: 10 iTunes previews
+# 94 Wednesday - Bleeds: 12 iTunes previews
+# 95 Jeff Tweedy - Twilight Override: 30 iTunes previews
+# 96 Lola Young - I'm Only F**king Myself: 14 iTunes previews
+# 97 JADE - THAT'S SHOWBIZ BABY!: 14 iTunes previews
+# 98 Saint Etienne - International: 12 iTunes previews
+# 99 Big Thief - Double Infinity: 9 iTunes previews
+#100 Blood Orange - Essex Honey: 14 iTunes previews
+1277 previews for 96/100 albums

@@ -1,0 +1,101 @@
+#  1 ROSALÍA - LUX: 15/15 tracks credited
+#  2 Taylor Swift - The Life of a Showgirl: 12/12 tracks credited
+#  3 Bad Bunny - DeBÍ TiRAR MáS FOToS: 17/17 tracks credited
+#  4 Taylor Swift - THE TORTURED POETS DEPARTMENT: 16/16 tracks credited
+#  5 Beyoncé - COWBOY CARTER: 27/27 tracks credited
+#  6 Ariana Grande - eternal sunshine: 13/13 tracks credited
+#  7 Taylor Swift - 1989 (Taylor's Version): 21/22 tracks credited
+#  8 Olivia Rodrigo - GUTS: 12/12 tracks credited
+#  9 boygenius - the record: 13/13 tracks credited
+# 10 Taylor Swift - Midnights: 13/13 tracks credited
+# 11 Adele - 30: 12/12 tracks credited
+# 12 Taylor Swift - Red (Taylor's Version): 31/31 tracks credited
+# 13 Phoebe Bridgers - Lost Weekend: 16/16 tracks credited
+# 14 Francisca Valenzuela - MALDITA: 12/12 tracks credited
+# 15 Gracie Abrams - Daughter from Hell: 16/16 tracks credited
+# 16 Olivia Rodrigo - you seem pretty sad for a girl so in love: 13/13 tracks credited
+# 17 Paul McCartney - The Boys of Dungeon Lane: 14/15 tracks credited
+# 18 Noah Kahan - The Great Divide: 17/17 tracks credited
+# 19 RAYE - THIS MUSIC MAY CONTAIN HOPE.: 17/17 tracks credited
+# 20 Neurosis - An Undying Love for a Burning World: 8/8 tracks credited
+# 21 BTS - ARIRANG: 15/15 tracks credited
+# 22 Cate Le Bon - Michelangelo Dying: 10/10 tracks credited
+# 23 Cardi B - AM I THE DRAMA?: 23/23 tracks credited
+# 24 Hayley Williams - Ego Death At A Bachelorette Party: 20/20 tracks credited
+# 25 Dijon - Baby: 12/12 tracks credited
+# 26 Reneé Rapp - BITE ME: 12/12 tracks credited
+# 27 Tyler Childers - Snipe Hunter: 13/13 tracks credited
+# 28 Lorde - Virgin: 11/11 tracks credited
+# 29 Eric Church - Evangeline vs. The Machine: 8/8 tracks credited
+# 30 Beyoncé - RENAISSANCE: 16/16 tracks credited
+# 31 Lizzo - Special: 12/12 tracks credited
+# 32 Bartees Strange - Farm to Table: 10/10 tracks credited
+# 33 Spoon - Lucifer on the Sofa: 10/10 tracks credited
+# 34 Lucy Dacus - Home Video: 12/12 tracks credited
+# 35 Taylor Swift - evermore: 15/15 tracks credited
+# 36 Taylor Swift - folklore: 16/16 tracks credited
+# 37 Jessie Ware - What's Your Pleasure?: 12/12 tracks credited
+# 38 Bob Dylan - Rough and Rowdy Ways: 10/10 tracks credited
+# 39 Neil Young - Homegrown: 12/12 tracks credited
+# 40 Fiona Apple - Fetch the Bolt Cutters: 13/13 tracks credited
+# 41 Bad Bunny - YHLQMDLG: 20/20 tracks credited
+# 42 Chuwi - ¡Libertad!: 13/13 tracks credited
+# 43 Fontaines D.C. - Dopamine Chamber: 11/11 tracks credited
+# 44 Miranda Lambert - Crisco: 12/12 tracks credited
+# 45 Godflesh - Decay: 6/6 tracks credited
+# 46 Beck - Ride Lonesome: 12/12 tracks credited
+# 47 beabadoobee - Pylon: 14/14 tracks credited
+# 48 Carly Rae Jepsen - Day and Night: 24/24 tracks credited
+# 49 Erykah Badu & The Alchemist - Before the World Blows: 16/16 tracks credited
+# 50 Mastodon - Marrow Deep: 12/12 tracks credited
+# 51 Weezer - Weezer (Gold Album): 10/10 tracks credited
+# 52 Dillom - LA NUEVA VIOLENCIA: 14/14 tracks credited
+# 53 Ravyn Lenae - Blue Island: 14/14 tracks credited
+# 54 KAROL G - NO ME ARREPIENTO DE SENTIR TANTO: 14/14 tracks credited
+# 55 Ariana Grande - petal: 12/12 tracks credited
+# 56 Charli xcx - Music, Fashion, Film: 11/11 tracks credited
+# 57 Steve Lacy - Oh yeah?: 10/10 tracks credited
+# 58 Jack White - Frozen Charlotte: 13/13 tracks credited
+# 59 Madonna - CONFESSIONS II: 16/16 tracks credited
+# 60 Ryan Beatty - Sweet Fortune: 10/10 tracks credited
+# 61 Rolling Stones - Foreign Tongues: 15/15 tracks credited
+# 62 Malcolm Todd - Do That Again: 13/13 tracks credited
+# 63 The Red Clay Strays - Grateful: 8/11 tracks credited
+# 64 Boards of Canada - Inferno: 19/19 tracks credited
+# 65 Drake - MAID OF HONOUR: 14/14 tracks credited
+# 66 Cola - Cost of Living Adjustment: 11/11 tracks credited
+# 67 North West - N0rth4evr: 6/6 tracks credited
+# 68 Kacey Musgraves - Middle of Nowhere: 13/13 tracks credited
+# 69 Foo Fighters - Your Favorite Toy: 10/10 tracks credited
+# 70 Nine Inch Nails & Boys Noize - Nine Inch Noize: 12/13 tracks credited
+# 71 Ella Langley - Dandelion: 19/19 tracks credited
+# 72 Robyn - Sexistential: 9/9 tracks credited
+# 73 Yebba - Jean: 14/14 tracks credited
+# 74 Harry Styles - Kiss All The Time. Disco, Occasionally.: 12/12 tracks credited
+# 75 Bruno Mars - The Romantic: 9/9 tracks credited
+# 76 BLACKPINK - DEADLINE: 5/5 tracks credited
+# 77 Hilary Duff - luck… or something: 11/11 tracks credited
+# 78 Charli xcx - Wuthering Heights: 12/12 tracks credited
+# 79 Lucinda Williams - World's Gone Wrong: 10/10 tracks credited
+# 80 De La Soul - Cabin In The Sky: 20/20 tracks credited
+# 81 Tems - Love Is a Kingdom: 7/7 tracks credited
+# 82 Mavis Staples - Sad and Beautiful World: 10/10 tracks credited
+# 83 Snocaps - Snocaps: 13/13 tracks credited
+# 84 Florence + the Machine - Everybody Scream: 12/12 tracks credited
+# 85 Lily Allen - West End Girl: 14/14 tracks credited
+# 86 Monaleo - Who Did The Body: 12/12 tracks credited
+# 87 Demi Lovato - It's Not That Deep: 11/11 tracks credited
+# 88 They Are Gutting a Body of Water - LOTTO: 10/10 tracks credited
+# 89 bar italia - Some Like It Hot: 12/12 tracks credited
+# 90 Not for Radio - Melt: 10/10 tracks credited
+# 91 Rauw Alejandro - Cosa Nuestra: Capítulo 0: 14/14 tracks credited
+# 92 Olivia Dean - The Art of Loving: 12/12 tracks credited
+# 93 Zara Larsson - Midnight Sun: 10/10 tracks credited
+# 94 Wednesday - Bleeds: 12/12 tracks credited
+# 95 Jeff Tweedy - Twilight Override: 30/30 tracks credited
+# 96 Lola Young - I'm Only F**king Myself: 14/14 tracks credited
+# 97 JADE - THAT'S SHOWBIZ BABY!: 14/14 tracks credited
+# 98 Saint Etienne - International: 12/12 tracks credited
+# 99 Big Thief - Double Infinity: 9/9 tracks credited
+#100 Blood Orange - Essex Honey: 14/14 tracks credited
+1335/1341 tracks have credits

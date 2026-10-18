@@ -1,0 +1,8 @@
+beautifulsoup4
+requests
+python-dotenv
+numpy
+scipy
+scikit-learn
+librosa
+POT
