@@ -1,0 +1,186 @@
+// the lines inside the ring: one chord for each person credited on both albums it joins.
+// each step only hands data to the next, so one can change without touching the others:
+// getChords (who connects to what) -> placeChordEnds (where on the circle)
+// -> drawChords (svg) -> highlightChords (how they look right now)
+
+// sizes are in the ring's viewBox units, see diagram.js
+const chordSpread = 0.42;  // how far an album's chords reach from its center, as a share of its slot
+const chordGap = 1 / 30;  // the space between two people's chords, as a share of a slot
+
+// how a chord looks in each tier, listed bottom to top: later tiers are drawn over earlier ones.
+// color only ever means selected, so a selected chord always outranks an unselected one, and
+// similarity only shows within a tier. saturation is how far the chord goes from its grey to its
+// full color, as [least similar albums, most similar albums]. grey is a css variable
+const chordStyles = {
+    background: { saturation: [0, 0], opacity: 0.1, grey: "--chord-background" },
+    context: { saturation: [0.5, 0.5], opacity: 0.2, grey: "--chord-grey" },
+    focus: { saturation: [0.5, 1], opacity: 1, grey: "--chord-grey" }
+};
+
+// everything drawn in here goes under the covers
+const chordLayer = document.createElementNS(svgNS, "g");
+chordLayer.classList.add("chords");
+ring.prepend(chordLayer);
+
+let drawnChords = [];
+let chordRadius = 0;  // set in drawChords, since it depends on the size of the covers
+
+// find everyone on two or more of these albums, and make a chord for each pair of albums they share.
+// an "end" is one person on one album, so all of that person's chords from an album share one end
+function getChords(ranks) {
+    const endsByPerson = {};
+
+    ranks.forEach(rank => {
+        getAlbumPeople(getAlbum(rank)).forEach(person => {
+            if (!endsByPerson[person.name]) {
+                endsByPerson[person.name] = [];
+            }
+            endsByPerson[person.name].push({
+                rank,
+                color: getPersonColor(person),
+                roles: [...person.roles]
+            });
+        });
+    });
+
+    const chords = [];
+    Object.entries(endsByPerson).forEach(([person, ends]) => {
+        ends.forEach((end, i) => {
+            ends.slice(i + 1).forEach(otherEnd => {
+                chords.push({
+                    person,
+                    ends: [end, otherEnd],
+                    similarity: getSimilarity(end.rank, otherEnd.rank)
+                });
+            });
+        });
+    });
+    return chords;
+}
+
+// give every end an angle. each album's ends are grouped by color, and within a color
+// sorted by the direction of their chords, which keeps crossings down
+function placeChordEnds(chords, ranks) {
+    const slot = 2 * Math.PI / ranks.length;
+    const positions = {};  // rank -> position on the ring
+    const albumEnds = {};  // rank -> that album's ends
+    ranks.forEach((rank, i) => {
+        positions[rank] = i;
+        albumEnds[rank] = new Set();
+    });
+
+    // how far clockwise the other album is from this end's album
+    function addLink(end, otherEnd) {
+        const distance = (positions[otherEnd.rank] - positions[end.rank] + ranks.length) % ranks.length;
+        end.distances = (end.distances || []).concat(distance);
+        albumEnds[end.rank].add(end);
+    }
+    chords.forEach(({ ends: [end, otherEnd] }) => {
+        addLink(end, otherEnd);
+        addLink(otherEnd, end);
+    });
+
+    const average = list => list.reduce((sum, value) => sum + value, 0) / list.length;
+
+    ranks.forEach((rank, i) => {
+        const ends = [...albumEnds[rank]].sort((a, b) =>
+            personColors.indexOf(a.color) - personColors.indexOf(b.color)
+            || average(b.distances) - average(a.distances));
+
+        const step = Math.min(slot * chordGap, 2 * slot * chordSpread / ends.length);
+        const center = ringAngle(i, ranks.length) * Math.PI / 180;
+        const start = center - step * (ends.length - 1) / 2;
+        ends.forEach((end, j) => {
+            end.angle = start + j * step;
+        });
+    });
+}
+
+function chordPoint(end) {
+    return [chordRadius * Math.cos(end.angle), chordRadius * Math.sin(end.angle)];
+}
+
+function chordColor(color, saturation, grey) {
+    return `color-mix(in srgb, var(--${color}) ${saturation * 100}%, var(${grey}))`;
+}
+
+// a chord whose ends are different colors blends between them
+function addChordGradient(chord, id) {
+    const [[x1, y1], [x2, y2]] = chord.ends.map(chordPoint);
+    const gradient = document.createElementNS(svgNS, "linearGradient");
+    gradient.id = id;
+    gradient.setAttribute("gradientUnits", "userSpaceOnUse");
+    gradient.setAttribute("x1", x1);
+    gradient.setAttribute("y1", y1);
+    gradient.setAttribute("x2", x2);
+    gradient.setAttribute("y2", y2);
+
+    chord.stops = chord.ends.map((end, i) => {
+        const stop = document.createElementNS(svgNS, "stop");
+        stop.setAttribute("offset", i);
+        gradient.append(stop);
+        return stop;
+    });
+
+    chordLayer.append(gradient);
+    chord.path.style.stroke = `url(#${id})`;
+}
+
+// draw a chord for every person shared between these albums
+function drawChords(ranks) {
+    // just inside the covers, even when one is scaled up by 1.25 on hover
+    chordRadius = ringEdge - ringCoverSize(ranks.length) * 1.125 - 4;
+
+    const chords = getChords(ranks);
+    placeChordEnds(chords, ranks);
+
+    chordLayer.replaceChildren();  // clear the old chords
+    drawnChords = chords.sort((a, b) => a.similarity - b.similarity);  // more similar pairs on top
+
+    drawnChords.forEach((chord, i) => {
+        const [[x1, y1], [x2, y2]] = chord.ends.map(chordPoint);
+
+        chord.path = document.createElementNS(svgNS, "path");
+        chord.path.classList.add("chord");
+        chord.path.setAttribute("d", `M${x1},${y1} Q0,0 ${x2},${y2}`);  // curves through the center
+
+        if (chord.ends[0].color !== chord.ends[1].color) {
+            addChordGradient(chord, "chord-gradient-" + i);
+        }
+
+        chordLayer.append(chord.path);
+    });
+}
+
+function styleChord(chord, style) {
+    const [least, most] = style.saturation;
+    const saturation = least + chord.similarity * (most - least);
+    if (chord.stops) {
+        chord.stops.forEach((stop, i) => {
+            stop.style.stopColor = chordColor(chord.ends[i].color, saturation, style.grey);
+        });
+    } else {
+        chord.path.style.stroke = chordColor(chord.ends[0].color, saturation, style.grey);
+    }
+    chord.path.style.strokeOpacity = style.opacity;
+}
+
+// tierOf(chord) says which of chordStyles each chord gets
+function highlightChords(tierOf) {
+    Object.keys(chordStyles).forEach(tier => {
+        drawnChords.filter(chord => tierOf(chord) === tier).forEach(chord => {
+            styleChord(chord, chordStyles[tier]);
+            chordLayer.append(chord.path);  // later tiers go on top
+        });
+    });
+}
+
+// does this chord connect to this album?
+function chordTouches(chord, rank) {
+    return chord.ends.some(end => end.rank === rank);
+}
+
+// is this person on any chords?
+function hasChords(name) {
+    return drawnChords.some(chord => chord.person === name);
+}

@@ -2,6 +2,19 @@
 :root {
     --frame-color: white;
     --padding: 24px;
+
+    /* the colors in personColors, shared by the credit tiles and the chords.
+       the credit categories are named after the keys in albums.json */
+    --composition_lyrics: #B9781D;
+    --production_engineering: #B91D51;
+    --performers: #B91D9F;
+    --multiple: #B9511D;
+    --artist: #1DB954;
+
+    /* what chords fade toward: dark for selected ones, and a lighter one
+       for the background, which would disappear on black at low opacity */
+    --chord-grey: #444441;
+    --chord-background: #9A9A94;
 }
 
 body {
@@ -70,10 +83,25 @@ body {
     transition: filter .3s, transform .3s;
 }
 
+/* at the end of a chord in focus. before the rules below, so they still win */
+.ring-cover.linked {
+    filter: brightness(.85);
+}
+
 .ring-cover:hover,
 .ring-cover.current {
     filter: none;
     transform: scale(1.25);
+}
+
+/* the lines between albums. they're only for looking at for now, so clicks go through */
+.chords {
+    pointer-events: none;
+}
+
+.chord {
+    fill: none;
+    stroke-width: .9;
 }
 
 
@@ -158,8 +186,68 @@ body {
 
 }
 
-.side-panel h2 {
+/* the title on the left, the listen button on the right.
+   a long title wraps instead of pushing the button out */
+.album-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 20px;
     margin-bottom: 4px;
+}
+
+.side-panel h2 {
+    margin: 0;
+}
+
+/* a white circle that fills with --c from the bottom on hover, while the icon flips and turns white.
+   --c is set on each button in listenButton */
+.listen-button {
+    position: relative;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    box-sizing: border-box;
+    background-color: white;
+    border: 2px solid white;
+    border-radius: 50%;
+    overflow: hidden;
+    color: black;
+}
+
+/* sits just below the circle until hovered, hidden by the overflow */
+.listen-button::before {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--c);
+    transition: top .5s;
+}
+
+.listen-button svg {
+    position: relative;
+    /* over the fill */
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+    transition: .5s;
+}
+
+.listen-button:hover::before,
+.listen-button:focus-visible::before {
+    top: 0;
+}
+
+.listen-button:hover svg,
+.listen-button:focus-visible svg {
+    color: white;
+    transform: rotateY(360deg);
 }
 
 .side-panel .artist {
@@ -193,10 +281,9 @@ body {
     flex-grow: 1000;
 }
 
-/* one tile per person, colored by which categories they appear in.
+/* one tile per person. --c, their color, is set on each tile in creditsList.
    flex-grow stretches each row's tiles to fill it edge to edge */
 .credit {
-    --c: #999;
     flex-grow: 1;
     padding: 4px 10px;
     border-radius: 6px;
@@ -213,32 +300,16 @@ body {
     filter: brightness(1);
 }
 
-.credit[data-category="composition_lyrics"] {
-    --c: #F2C14E;
+/* outlined instead of filled: this person isn't on any other album on the ring */
+.credit.no-chords {
+    background-color: transparent;
+    box-shadow: inset 0 0 0 1px var(--c);
+    color: var(--c);
 }
 
-.credit[data-category="production_engineering"] {
-    --c: #5DA9E9;
-}
-
-.credit[data-category="performers"] {
-    --c: #F78154;
-}
-
-.credit[data-category="composition_lyrics production_engineering"] {
-    --c: #8FD694;
-}
-
-.credit[data-category="composition_lyrics performers"] {
-    --c: #F2A1C4;
-}
-
-.credit[data-category="production_engineering performers"] {
-    --c: #B497D6;
-}
-
-.credit[data-category="composition_lyrics production_engineering performers"] {
-    --c: #FFFFFF;
+/* while a tile is open, the others step back so it's easy to find */
+.credits-list:has(.credit.open) .credit:not(.open, :hover) {
+    filter: brightness(.45);
 }
 
 /* folded shut until the tile is clicked open, then it opens inside the tile and pushes the rows below down.
