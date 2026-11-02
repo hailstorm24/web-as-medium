@@ -65,9 +65,11 @@ function drawCovers(ranks = ringRanks) {
 
 // make the ring and the tiles match currentRank and currentPerson.
 // the album is always selected, and a person narrows it down to their chords, with the rest of the
-// album's chords kept as context. a person with no chords leaves the ring as it is
+// album's chords kept as context. a person with no chords leaves the ring as it is.
+// hovering a chord shows that person the same way, without changing the selection
 function showSelection() {
-    const person = hasChords(currentPerson) ? currentPerson : null;
+    const shownPerson = hoveredPerson ?? currentPerson;
+    const person = hasChords(shownPerson) ? shownPerson : null;
     const inFocus = chord => person ? chord.person === person : chordTouches(chord, currentRank);
 
     highlightChords(chord => {
@@ -86,6 +88,8 @@ function showSelection() {
     });
 
     sidePanel.querySelectorAll(".credit").forEach(tile => {
-        tile.classList.toggle("no-chords", !hasChords(tileName(tile)));
+        const name = tileName(tile);
+        tile.classList.toggle("no-chords", !hasChords(name));
+        tile.classList.toggle("open", name === currentPerson);
     });
 }

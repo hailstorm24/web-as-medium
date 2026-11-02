@@ -2,6 +2,7 @@ let albums = [];      // all 100 albums from albums.json
 let similarityMatrix = null;  // how alike every pair of albums sounds, from albums.json
 let currentRank = 12;  // which album the side panel is showing
 let currentPerson = null;  // whose credit tile is open, if anyone's
+let hoveredPerson = null;  // whose chord the mouse is on, if anyone's
 
 const sidePanel = document.querySelector(".side-panel");
 
@@ -196,23 +197,27 @@ function tileName(tile) {
     return tile.querySelector(".credit-name").textContent;
 }
 
-// clicking a credit tile opens its details (and closes any other open one) and selects that person;
-// clicking it again closes it and goes back to the album.
+// selects this person, or goes back to the album if they're already selected.
+// showSelection opens their tile and closes any other
+function selectPerson(name) {
+    currentPerson = name === currentPerson ? null : name;
+    showSelection();
+}
+
+// shows this person's chords on the ring without selecting them. null goes back to the selection
+function previewPerson(name) {
+    if (name !== hoveredPerson) {
+        hoveredPerson = name;
+        showSelection();
+    }
+}
+
 // listening on the side panel, since its contents get replaced for every album
 sidePanel.addEventListener("click", event => {
     const tile = event.target.closest(".credit");
-    if (!tile) {
-        return;
+    if (tile) {
+        selectPerson(tileName(tile));
     }
-    sidePanel.querySelectorAll(".credit.open").forEach(open => {
-        if (open !== tile) {
-            open.classList.remove("open");
-        }
-    });
-    tile.classList.toggle("open");
-
-    currentPerson = tile.classList.contains("open") ? tileName(tile) : null;
-    showSelection();
 });
 
 // where an album can be listened to. color fills the listen button on hover,

@@ -17,10 +17,13 @@ const chordStyles = {
     focus: { saturation: [0.5, 1], opacity: 1, grey: "--chord-grey" }
 };
 
-// everything drawn in here goes under the covers
+// everything drawn in here goes under the covers.
+// chords are too thin to aim at, so each one has a wider invisible copy in hitLayer that takes the mouse
 const chordLayer = document.createElementNS(svgNS, "g");
 chordLayer.classList.add("chords");
-ring.prepend(chordLayer);
+const hitLayer = document.createElementNS(svgNS, "g");
+hitLayer.classList.add("chord-hits");
+ring.prepend(chordLayer, hitLayer);
 
 let drawnChords = [];
 let chordRadius = 0;  // set in drawChords, since it depends on the size of the covers
@@ -135,22 +138,55 @@ function drawChords(ranks) {
     placeChordEnds(chords, ranks);
 
     chordLayer.replaceChildren();  // clear the old chords
+    hitLayer.replaceChildren();
     drawnChords = chords.sort((a, b) => a.similarity - b.similarity);  // more similar pairs on top
 
     drawnChords.forEach((chord, i) => {
         const [[x1, y1], [x2, y2]] = chord.ends.map(chordPoint);
+        const curve = `M${x1},${y1} Q0,0 ${x2},${y2}`;  // curves through the center
 
         chord.path = document.createElementNS(svgNS, "path");
         chord.path.classList.add("chord");
-        chord.path.setAttribute("d", `M${x1},${y1} Q0,0 ${x2},${y2}`);  // curves through the center
+        chord.path.setAttribute("d", curve);
 
         if (chord.ends[0].color !== chord.ends[1].color) {
             addChordGradient(chord, "chord-gradient-" + i);
         }
 
         chordLayer.append(chord.path);
+
+        // hover text with the person's name
+        const title = document.createElementNS(svgNS, "title");
+        title.textContent = chord.person;
+
+        chord.hit = document.createElementNS(svgNS, "path");
+        chord.hit.classList.add("chord-hit");
+        chord.hit.dataset.index = i;
+        chord.hit.setAttribute("d", curve);
+        chord.hit.append(title);
+        hitLayer.append(chord.hit);
     });
 }
+
+// the chord under the mouse
+function chordAt(event) {
+    return drawnChords[event.target.dataset.index];
+}
+
+// selects the person on this chord. a chord that doesn't touch the album being shown
+// moves to the higher ranked of its two albums first, since a person is always selected on an album
+function clickChord(chord) {
+    if (!chordTouches(chord, currentRank)) {
+        showAlbum(Math.min(...chord.ends.map(end => end.rank)));
+    }
+    selectPerson(chord.person);
+    sidePanel.querySelector(".credit.open")?.scrollIntoView({ block: "center" });
+}
+
+// listening on the layer, since its paths get replaced in every redraw
+hitLayer.addEventListener("mouseover", event => previewPerson(chordAt(event).person));
+hitLayer.addEventListener("mouseleave", () => previewPerson(null));
+hitLayer.addEventListener("click", event => clickChord(chordAt(event)));
 
 function styleChord(chord, style) {
     const [least, most] = style.saturation;
@@ -171,6 +207,7 @@ function highlightChords(tierOf) {
         drawnChords.filter(chord => tierOf(chord) === tier).forEach(chord => {
             styleChord(chord, chordStyles[tier]);
             chordLayer.append(chord.path);  // later tiers go on top
+            hitLayer.append(chord.hit);  // and win when chords overlap
         });
     });
 }

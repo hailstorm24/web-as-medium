@@ -94,7 +94,7 @@ body {
     transform: scale(1.25);
 }
 
-/* the lines between albums. they're only for looking at for now, so clicks go through */
+/* the lines between albums. they're only for looking at: their copies in .chord-hits take the mouse */
 .chords {
     pointer-events: none;
 }
@@ -102,6 +102,15 @@ body {
 .chord {
     fill: none;
     stroke-width: .9;
+}
+
+/* invisible, and wider than the chord it's on so it's easy to hit */
+.chord-hit {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 5;
+    pointer-events: stroke;
+    cursor: pointer;
 }
 
 
