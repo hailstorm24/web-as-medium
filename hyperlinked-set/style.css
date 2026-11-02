@@ -1,0 +1,288 @@
+/* shared by the cover's hover frame and the main panel */
+:root {
+    --frame-color: white;
+    --padding: 24px;
+}
+
+body {
+    margin: 0;
+    background-color: black;
+}
+
+.page {
+    display: grid;
+    grid-template-columns: 13fr 7fr;
+    height: 100vh;
+}
+
+.main-panel {
+    background-color: var(--frame-color);
+    transition: background-color .3s;
+    padding: var(--padding);
+    display: grid;
+    place-items: center;
+    container-type: size;
+    min-height: 0;
+}
+
+.main-panel .diagram {
+    grid-area: 1 / 1;
+    width: min(100cqw, 100cqh);
+    aspect-ratio: 1;
+}
+
+/* later in the html, so it's drawn over the record */
+.diagram {
+    background-color: black;
+    border-radius: 50%;
+    position: relative;
+    border: rebeccapurple bold 1px;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.diagram .ring {
+    width: 100%;
+    height: 100%;
+    display: block;
+    /* animation: spin 20s linear infinite paused; */
+}
+
+/* .diagram:hover .ring {
+    animation-play-state: running;
+} */
+
+/* the album covers around the edge: dimmed like the side panel cover,
+   and full brightness + a little bigger on hover or when it's the album being shown */
+.ring-cover {
+    filter: brightness(0.6);
+    cursor: pointer;
+    transform-box: fill-box;
+    /* scale from the cover's own center, not the svg's */
+    transform-origin: center;
+    transition: filter .3s, transform .3s;
+}
+
+.ring-cover:hover,
+.ring-cover.current {
+    filter: none;
+    transform: scale(1.25);
+}
+
+
+.side-panel {
+    background-color: black;
+    color: white;
+    font-family: sans-serif;
+    padding: var(--padding);
+    /* cover + title on top, tags below */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.side-panel .cover {
+    --g: 10px;
+    /* gap between the cover and the frame on hover */
+    --b: 4px;
+    /* frame thickness */
+    --c: var(--frame-color);
+    /* frame color */
+
+    width: min(50vh, 100%);
+    aspect-ratio: 1;
+    filter: brightness(0.6);
+    outline: 0 solid transparent;
+    /* transparent so the frame fades out instead of snapping off */
+    outline-offset: 0;
+    transition: .3s;
+}
+
+/* on hover: brighten the cover and slide a frame out around it */
+.side-panel .cover:hover {
+    filter: none;
+    outline-width: var(--b);
+    outline-offset: var(--g);
+    outline-color: var(--c);
+}
+
+/* on wide screens, center the cover, with the title lined up under its left edge */
+@media screen and (min-width: 769px) {
+    .album-info {
+        width: min(50vh, 100%);
+        /* same width as the cover, so centering the block centers the cover
+           and the left-aligned text starts where the cover does */
+        align-self: center;
+    }
+}
+
+/* on narrow screens, stack the panels instead of putting them side by side */
+@media screen and (max-width: 768px) {
+    .page {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+    }
+
+    /* cover + title on the left, tags on the right */
+    .side-panel {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        grid-template-rows: minmax(0, 1fr);
+        /* one row, exactly the panel's height, so a long tag list can't stretch it */
+        gap: 24px;
+    }
+
+    .side-panel .cover {
+        width: 100%;
+    }
+
+    /* line the tags up with the top of the cover */
+    .credits-list {
+        margin-top: 0;
+    }
+}
+
+@media screen and (max-width: 512px) {
+
+    .side-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+}
+
+.side-panel h2 {
+    margin-bottom: 4px;
+}
+
+.side-panel .artist {
+    margin-top: 0;
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.credits-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    /* an open tile grows on its own, without stretching its row-mates */
+    gap: 6px;
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0;
+    /* the tags scroll on their own, so the cover stays in view */
+    flex: 1;
+    min-height: 0;
+    /* lets the list shrink below its content's height so it can scroll */
+    overflow-y: auto;
+    align-content: flex-start;
+    /* keep rows packed at the top instead of spreading out to fill the height */
+}
+
+/* an invisible last item that soaks up the leftover space in the last row,
+   so those tiles keep their natural width instead of stretching across it */
+.credits-list::after {
+    content: "";
+    flex-grow: 1000;
+}
+
+/* one tile per person, colored by which categories they appear in.
+   flex-grow stretches each row's tiles to fill it edge to edge */
+.credit {
+    --c: #999;
+    flex-grow: 1;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background-color: var(--c);
+    filter: brightness(.8);
+    color: black;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: filter .15s;
+}
+
+.credit:hover {
+    filter: brightness(1);
+}
+
+.credit[data-category="composition_lyrics"] {
+    --c: #F2C14E;
+}
+
+.credit[data-category="production_engineering"] {
+    --c: #5DA9E9;
+}
+
+.credit[data-category="performers"] {
+    --c: #F78154;
+}
+
+.credit[data-category="composition_lyrics production_engineering"] {
+    --c: #8FD694;
+}
+
+.credit[data-category="composition_lyrics performers"] {
+    --c: #F2A1C4;
+}
+
+.credit[data-category="production_engineering performers"] {
+    --c: #B497D6;
+}
+
+.credit[data-category="composition_lyrics production_engineering performers"] {
+    --c: #FFFFFF;
+}
+
+/* folded shut until the tile is clicked open, then it opens inside the tile and pushes the rows below down.
+   a grid row going from 0fr to 1fr animates to the content's height (height: auto can't be animated) */
+.credit-details {
+    display: grid;
+    grid-template-rows: 0fr;
+    width: 0;
+    /* don't let the details widen the tile... */
+    min-width: 100%;
+    /* ...just fill whatever width it already has */
+    font-weight: normal;
+    opacity: 0;
+    transition: grid-template-rows .2s, opacity .2s;
+}
+
+.credit.open .credit-details {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.credit-details-inner {
+    min-height: 0;
+    /* lets the 0fr row actually shrink to nothing */
+    overflow: hidden;
+}
+
+.credit-details-inner>span {
+    display: block;
+}
+
+.credit-roles {
+    padding-top: 4px;
+    font-size: 12px;
+}
+
+.credit-tracks {
+    font-size: 11px;
+    opacity: .7;
+}
+
+.credit-category {
+    padding-bottom: 2px;
+    font-size: 10px;
+    text-transform: uppercase;
+    opacity: .7;
+}
