@@ -17,6 +17,9 @@ function setPanelClosed(closed) {
     panelToggle.setAttribute("aria-label", closed ? "Open side panel" : "Close side panel");
     showingAll = closed;
     showSelection();
+    if (!closed) {
+        setCrateClosed(true);  // the crate is over the side panel
+    }
 }
 
 panelToggle.addEventListener("click", () => setPanelClosed(!page.classList.contains("panel-closed")));
@@ -44,8 +47,16 @@ function getSimilarity(rankA, rankB) {
 
 // the cover urls in albums.json (albumoftheyear.org) block outside sites,
 // so ask Spotify for the cover instead, and Apple if Spotify doesn't have it.
-// results are saved in coverCache so each album is only looked up once.
+// results are saved in coverCache so each album is only looked up once,
+// and the urls in savedCovers so reloading the page doesn't look them all up again.
 const coverCache = {};
+const savedCovers = JSON.parse(localStorage.getItem("covers")) || {};
+
+function saveCover(album, src) {
+    savedCovers[album.rank] = src;
+    localStorage.setItem("covers", JSON.stringify(savedCovers));
+    return src;
+}
 
 function getSpotifyCover(album) {
     const url = "https://open.spotify.com/album/" + album.spotify_album_id;
@@ -62,10 +73,12 @@ function getAppleCover(album) {
 
 function getCover(album) {
     if (!coverCache[album.rank]) {
-        if (album.spotify_album_id) {
-            coverCache[album.rank] = getSpotifyCover(album).catch(() => getAppleCover(album));
+        if (savedCovers[album.rank]) {
+            coverCache[album.rank] = Promise.resolve(savedCovers[album.rank]);
+        } else if (album.spotify_album_id) {
+            coverCache[album.rank] = getSpotifyCover(album).catch(() => getAppleCover(album)).then(src => saveCover(album, src));
         } else {
-            coverCache[album.rank] = getAppleCover(album);
+            coverCache[album.rank] = getAppleCover(album).then(src => saveCover(album, src));
         }
     }
     return coverCache[album.rank];

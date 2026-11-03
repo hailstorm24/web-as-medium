@@ -14,7 +14,7 @@
 </head>
 
 <body>
-    <div class="page">
+    <div class="page crate-closed">
         <div class="main-panel">
             <div class="diagram">
                 <svg class="ring" viewBox="-380 -380 760 760" role="img"
@@ -30,10 +30,29 @@
                 </svg>
             </button>
         </div>
+        <div class="crate-slide">
+            <div class="crate" id="crate">
+                <div class="crate-info">
+                    <div class="crate-header">
+                        <p class="crate-count"></p>
+                        <button class="crate-all" type="button"></button>
+                    </div>
+                    <p class="crate-readout" aria-live="polite"></p>
+                </div>
+                <div class="crate-list"></div>
+            </div>
+            <button class="crate-toggle" type="button" aria-controls="crate" aria-expanded="false"
+                aria-label="Open record crate">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
     </div>
     <script src="main.js"></script>
     <script src="diagram.js"></script>
     <script src="chords.js"></script>
+    <script src="crate.js"></script>
 </body>
 
 </html>

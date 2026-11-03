@@ -73,12 +73,12 @@ function drawCovers(ranks = ringRanks) {
 
 // make the ring and the tiles match currentRank and currentPerson.
 // the album is always selected, and a person narrows it down to their chords, with the rest of the
-// album's chords kept as context. a person with no chords leaves the ring as it is.
+// album's chords kept as context. a person with no chords has nothing to show, so the whole ring goes grey.
 // hovering a chord or a cover shows that person or album the same way, without changing the selection.
 // while showingAll, nothing is selected, so every chord and cover is in color until something's hovered
 function showSelection() {
-    const shownPerson = hoveredPerson ?? (showingAll || hoveredRank ? null : currentPerson);
-    const person = hasChords(shownPerson) ? shownPerson : null;
+    const person = hoveredPerson ?? (showingAll || hoveredRank ? null : currentPerson);
+    const noChords = person && !hasChords(person);
     const shownRank = hoveredRank ?? currentRank;
     const everything = showingAll && !person && !hoveredRank;
     const inFocus = chord => person ? chord.person === person : everything || chordTouches(chord, shownRank);
@@ -87,7 +87,7 @@ function showSelection() {
         if (inFocus(chord)) {
             return "focus";
         }
-        return !showingAll && chordTouches(chord, currentRank) ? "context" : "background";
+        return !showingAll && !noChords && chordTouches(chord, currentRank) ? "context" : "background";
     });
 
     // the covers at both ends of the chords in focus
