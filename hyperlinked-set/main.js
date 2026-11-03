@@ -3,8 +3,23 @@ let similarityMatrix = null;  // how alike every pair of albums sounds, from alb
 let currentRank = 12;  // which album the side panel is showing
 let currentPerson = null;  // whose credit tile is open, if anyone's
 let hoveredPerson = null;  // whose chord the mouse is on, if anyone's
+let hoveredRank = null;  // which album's cover the mouse is on, if any
+let showingAll = false;  // has the panel closed with nothing picked since? the selection comes back when it reopens
 
+const page = document.querySelector(".page");
 const sidePanel = document.querySelector(".side-panel");
+const panelToggle = document.querySelector(".panel-toggle");
+
+// the page's grid stays the same, so the record doesn't move when the panel closes
+function setPanelClosed(closed) {
+    page.classList.toggle("panel-closed", closed);
+    panelToggle.setAttribute("aria-expanded", !closed);
+    panelToggle.setAttribute("aria-label", closed ? "Open side panel" : "Close side panel");
+    showingAll = closed;
+    showSelection();
+}
+
+panelToggle.addEventListener("click", () => setPanelClosed(!page.classList.contains("panel-closed")));
 
 // load the data, then show the first album
 fetch("albums.json")
@@ -117,6 +132,20 @@ function getAlbumColor(img) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
+// read this album's color from its cover, and set it on the root as --album-[rank].
+// black & white covers never get one, so they fall back to white wherever it's used
+function loadAlbumColor(album, src) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";  // lets getAlbumColor read the pixels
+    img.addEventListener("load", () => {
+        const color = getAlbumColor(img);
+        if (color) {
+            document.documentElement.style.setProperty("--album-" + album.rank, color);
+        }
+    });
+    img.src = src;
+}
+
 // the credit categories in albums.json, and how to label them
 const creditCategories = {
     composition_lyrics: "Writing & Composition",
@@ -154,8 +183,14 @@ function getAlbumPeople(album) {
     return Object.values(people);
 }
 
-// one color for this person on this album, so their tile and their chords always match
-function getPersonColor(person) {
+// one color for this person on this album, so their tile and their chords always match.
+// by album: --album-[rank], set by loadAlbumColor. by connection type: the css variables in personColors
+const colorByAlbum = true;
+
+function getPersonColor(person, rank) {
+    if (colorByAlbum) {
+        return "album-" + rank;
+    }
     if (person.tracks.artist) {
         return "artist";
     }
@@ -178,7 +213,7 @@ function getAlbumCredits(album) {
 
 function creditsList(album) {
     const items = getAlbumCredits(album).map(c => `
-        <li class="credit" style="--c: var(--${getPersonColor(c)})">
+        <li class="credit" style="--c: var(--${getPersonColor(c, album.rank)}, white)">
             <span class="credit-name">${c.name}</span>
             <span class="credit-details">
                 <span class="credit-details-inner">
@@ -200,7 +235,8 @@ function tileName(tile) {
 // selects this person, or goes back to the album if they're already selected.
 // showSelection opens their tile and closes any other
 function selectPerson(name) {
-    currentPerson = name === currentPerson ? null : name;
+    currentPerson = name === currentPerson && !showingAll ? null : name;
+    showingAll = false;
     showSelection();
 }
 
@@ -210,6 +246,12 @@ function previewPerson(name) {
         hoveredPerson = name;
         showSelection();
     }
+}
+
+// shows this album's chords on the ring without selecting it. null goes back to the selection
+function previewAlbum(rank) {
+    hoveredRank = rank;
+    showSelection();
 }
 
 // listening on the side panel, since its contents get replaced for every album
@@ -260,6 +302,7 @@ function listenButton(album) {
 function showAlbum(rank) {
     currentRank = rank;
     currentPerson = null;
+    showingAll = false;
     const album = getAlbum(rank);
 
     sidePanel.innerHTML = `

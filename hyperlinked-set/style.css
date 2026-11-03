@@ -26,6 +26,11 @@ body {
     display: grid;
     grid-template-columns: 13fr 7fr;
     height: 100vh;
+    /* clip, not hidden: a closed panel has to be impossible to scroll to, even from a script */
+    overflow: clip;
+    /* always the main panel's color, so it's already there when the side panel slides away */
+    background-color: var(--frame-color);
+    transition: background-color .3s;
 }
 
 .main-panel {
@@ -123,6 +128,73 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    transition: visibility .3s;
+}
+
+/* hidden as well as slid away, so nothing in it can be tabbed to */
+.panel-closed .side-panel {
+    visibility: hidden;
+}
+
+/* the side panel and its button, which move together */
+.panel-slide {
+    position: relative;
+    display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+    transition: transform .3s;
+}
+
+.panel-closed .panel-slide {
+    transform: translateX(100%);
+}
+
+/* a circle centered on the side panel's edge. it fits inside the two panels' padding, so it never
+   covers anything. the arrow points where the panel will go. black with a white ring, since the
+   main panel can be any color */
+.panel-toggle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    translate: -50% -50%;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: black;
+    border: 2px solid white;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: background-color .15s, color .15s, translate .3s;
+}
+
+/* the closed panel's edge is the edge of the screen, so this keeps the button just inside it */
+.panel-closed .panel-toggle {
+    translate: -100% -50%;
+}
+
+.panel-toggle:hover {
+    background-color: white;
+    color: black;
+}
+
+.panel-toggle svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: rotate .3s;
+}
+
+.panel-closed .panel-toggle svg {
+    rotate: 180deg;
 }
 
 .side-panel .cover {
@@ -174,6 +246,21 @@ body {
         grid-template-rows: minmax(0, 1fr);
         /* one row, exactly the panel's height, so a long tag list can't stretch it */
         gap: 24px;
+    }
+
+    /* the panel is below the record here, so everything turns a quarter turn */
+    .panel-closed .panel-slide {
+        transform: translateY(100%);
+    }
+
+    .panel-toggle {
+        left: 50%;
+        top: 0;
+        rotate: 90deg;
+    }
+
+    .panel-closed .panel-toggle {
+        translate: -50% -100%;
     }
 
     .side-panel .cover {
@@ -297,16 +384,12 @@ body {
     padding: 4px 10px;
     border-radius: 6px;
     background-color: var(--c);
-    filter: brightness(.8);
+    filter: brightness(.65);
     color: black;
     font-size: 13px;
     font-weight: bold;
     cursor: pointer;
-    transition: filter .15s;
-}
-
-.credit:hover {
-    filter: brightness(1);
+    transition: filter .15s, background-color .15s, box-shadow .15s;
 }
 
 /* outlined instead of filled: this person isn't on any other album on the ring */
@@ -316,8 +399,19 @@ body {
     color: var(--c);
 }
 
+/* hovered, open, or on the chord under the mouse: full color with a white ring, inset so
+   the tile doesn't change size and the list can't clip it. after .no-chords, so those fill in too */
+.credit:hover,
+.credit.open,
+.credit.highlighted {
+    filter: none;
+    background-color: var(--c);
+    box-shadow: inset 0 0 0 2px white;
+    color: black;
+}
+
 /* while a tile is open, the others step back so it's easy to find */
-.credits-list:has(.credit.open) .credit:not(.open, :hover) {
+.credits-list:has(.credit.open) .credit:not(.open, .highlighted, :hover) {
     filter: brightness(.45);
 }
 

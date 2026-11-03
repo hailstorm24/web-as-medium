@@ -21,7 +21,15 @@
                     aria-label="Chord diagram"></svg>
             </div>
         </div>
-        <div class="side-panel"></div>
+        <div class="panel-slide">
+            <div class="side-panel" id="side-panel"></div>
+            <button class="panel-toggle" type="button" aria-controls="side-panel" aria-expanded="true"
+                aria-label="Close side panel">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+        </div>
     </div>
     <script src="main.js"></script>
     <script src="diagram.js"></script>

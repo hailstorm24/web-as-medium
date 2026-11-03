@@ -52,9 +52,17 @@ function drawCovers(ranks = ringRanks) {
         title.textContent = album.album + " — " + album.artist;
         image.append(title);
 
-        getCover(album).then(src => image.setAttribute("href", src));
+        getCover(album).then(src => {
+            image.setAttribute("href", src);
+            loadAlbumColor(album, src);
+        });
 
-        image.addEventListener("click", () => showAlbum(album.rank));
+        image.addEventListener("mouseenter", () => previewAlbum(album.rank));
+        image.addEventListener("mouseleave", () => previewAlbum(null));
+        image.addEventListener("click", () => {
+            showAlbum(album.rank);
+            setPanelClosed(false);
+        });
 
         group.append(image);
         ring.append(group);
@@ -66,30 +74,34 @@ function drawCovers(ranks = ringRanks) {
 // make the ring and the tiles match currentRank and currentPerson.
 // the album is always selected, and a person narrows it down to their chords, with the rest of the
 // album's chords kept as context. a person with no chords leaves the ring as it is.
-// hovering a chord shows that person the same way, without changing the selection
+// hovering a chord or a cover shows that person or album the same way, without changing the selection.
+// while showingAll, nothing is selected, so every chord and cover is in color until something's hovered
 function showSelection() {
-    const shownPerson = hoveredPerson ?? currentPerson;
+    const shownPerson = hoveredPerson ?? (showingAll || hoveredRank ? null : currentPerson);
     const person = hasChords(shownPerson) ? shownPerson : null;
-    const inFocus = chord => person ? chord.person === person : chordTouches(chord, currentRank);
+    const shownRank = hoveredRank ?? currentRank;
+    const everything = showingAll && !person && !hoveredRank;
+    const inFocus = chord => person ? chord.person === person : everything || chordTouches(chord, shownRank);
 
     highlightChords(chord => {
         if (inFocus(chord)) {
             return "focus";
         }
-        return chordTouches(chord, currentRank) ? "context" : "background";
+        return !showingAll && chordTouches(chord, currentRank) ? "context" : "background";
     });
 
     // the covers at both ends of the chords in focus
     const linkedRanks = new Set(drawnChords.filter(inFocus).flatMap(chord => chord.ends.map(end => end.rank)));
     ring.querySelectorAll(".ring-cover").forEach(image => {
         const rank = Number(image.dataset.rank);
-        image.classList.toggle("current", rank === currentRank);
-        image.classList.toggle("linked", linkedRanks.has(rank));
+        image.classList.toggle("current", !showingAll && rank === currentRank);
+        image.classList.toggle("linked", linkedRanks.has(rank) || everything);  // even with no chords
     });
 
     sidePanel.querySelectorAll(".credit").forEach(tile => {
         const name = tileName(tile);
         tile.classList.toggle("no-chords", !hasChords(name));
         tile.classList.toggle("open", name === currentPerson);
+        tile.classList.toggle("highlighted", name === hoveredPerson);
     });
 }

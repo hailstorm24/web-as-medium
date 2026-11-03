@@ -40,7 +40,7 @@ function getChords(ranks) {
             }
             endsByPerson[person.name].push({
                 rank,
-                color: getPersonColor(person),
+                color: getPersonColor(person, rank),
                 roles: [...person.roles]
             });
         });
@@ -104,7 +104,7 @@ function chordPoint(end) {
 }
 
 function chordColor(color, saturation, grey) {
-    return `color-mix(in srgb, var(--${color}) ${saturation * 100}%, var(${grey}))`;
+    return `color-mix(in srgb, var(--${color}, white) ${saturation * 100}%, var(${grey}))`;
 }
 
 // a chord whose ends are different colors blends between them
@@ -173,13 +173,14 @@ function chordAt(event) {
     return drawnChords[event.target.dataset.index];
 }
 
-// selects the person on this chord. a chord that doesn't touch the album being shown
+// selects the person on this chord and opens the panel to them. a chord that doesn't touch the album being shown
 // moves to the higher ranked of its two albums first, since a person is always selected on an album
 function clickChord(chord) {
     if (!chordTouches(chord, currentRank)) {
         showAlbum(Math.min(...chord.ends.map(end => end.rank)));
     }
     selectPerson(chord.person);
+    setPanelClosed(false);
     sidePanel.querySelector(".credit.open")?.scrollIntoView({ block: "center" });
 }
 
