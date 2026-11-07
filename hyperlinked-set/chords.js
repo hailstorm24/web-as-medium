@@ -10,10 +10,11 @@ const chordGap = 1 / 30;  // the space between two people's chords, as a share o
 // how a chord looks in each tier, listed bottom to top: later tiers are drawn over earlier ones.
 // color only ever means selected, so a selected chord always outranks an unselected one, and
 // similarity only shows within a tier. saturation is how far the chord goes from its grey to its
-// full color, as [least similar albums, most similar albums]. grey is a css variable
+// full color, as [least similar albums, most similar albums]. grey is a css variable.
+// opacity is any css value, so the dimmer tiers can scale with --dim in style.css
 const chordStyles = {
-    background: { saturation: [0, 0], opacity: 0.1, grey: "--chord-background" },
-    context: { saturation: [0.5, 0.5], opacity: 0.2, grey: "--chord-grey" },
+    background: { saturation: [0, 0], opacity: "calc(var(--dim) * .2)", grey: "--chord-background" },
+    context: { saturation: [0.5, 0.5], opacity: "calc(var(--dim) * .4)", grey: "--chord-grey" },
     focus: { saturation: [0.5, 1], opacity: 1, grey: "--chord-grey" }
 };
 
@@ -173,7 +174,7 @@ function chordAt(event) {
     return drawnChords[event.target.dataset.index];
 }
 
-// selects the person on this chord and opens the panel to them. a chord that doesn't touch the album being shown
+// selects the person on this chord and opens the panel to their view. a chord that doesn't touch the album being shown
 // moves to the higher ranked of its two albums first, since a person is always selected on an album
 function clickChord(chord) {
     if (!chordTouches(chord, currentRank)) {
@@ -181,12 +182,18 @@ function clickChord(chord) {
     }
     selectPerson(chord.person);
     setPanelClosed(false);
-    sidePanel.querySelector(".credit.open")?.scrollIntoView({ block: "center" });
 }
 
 // listening on the layer, since its paths get replaced in every redraw
-hitLayer.addEventListener("mouseover", event => previewPerson(chordAt(event).person));
-hitLayer.addEventListener("mouseleave", () => previewPerson(null));
+hitLayer.addEventListener("mouseover", event => previewChord(chordAt(event)));
+hitLayer.addEventListener("mouseleave", () => previewChord(null));
+
+// shows this chord's person on the ring, and remembers its albums so a person's view can light up their rows
+function previewChord(chord) {
+    hoveredChordRanks = chord ? chord.ends.map(end => end.rank) : [];
+    hoveredPerson = null;  // so previewPerson redraws even when moving between two of the same person's chords
+    previewPerson(chord ? chord.person : null);
+}
 hitLayer.addEventListener("click", event => clickChord(chordAt(event)));
 
 function styleChord(chord, style) {

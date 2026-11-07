@@ -3,6 +3,13 @@
     --frame-color: white;
     --padding: 24px;
 
+    /* how bright anything resting or unselected is, from 0 (gone) to 1 (no dimming).
+       raise it for more contrast on the black background. everything dimmed is derived from it:
+       covers, credit tiles, muted text, and the chords' opacity in chords.js */
+    --dim: 0.5;
+    --dim-half: calc((1 + var(--dim)) / 2);  /* halfway back to full: hovered or linked */
+    --dim-deep: calc(var(--dim) * .5);  /* dimmer still: the crate's unselected covers */
+
     /* the colors in personColors, shared by the credit tiles and the chords.
        the credit categories are named after the keys in albums.json */
     --composition_lyrics: #B9781D;
@@ -80,7 +87,7 @@ body {
 /* the album covers around the edge: dimmed like the side panel cover,
    and full brightness + a little bigger on hover or when it's the album being shown */
 .ring-cover {
-    filter: brightness(0.6);
+    filter: brightness(var(--dim-deep));
     cursor: pointer;
     transform-box: fill-box;
     /* scale from the cover's own center, not the svg's */
@@ -90,11 +97,12 @@ body {
 
 /* at the end of a chord in focus. before the rules below, so they still win */
 .ring-cover.linked {
-    filter: brightness(.85);
+    filter: brightness(var(--dim-half));
 }
 
 .ring-cover:hover,
-.ring-cover.current {
+.ring-cover.current,
+.ring-cover.hovered {
     filter: none;
     transform: scale(1.25);
 }
@@ -209,7 +217,7 @@ body {
 
     width: min(50vh, 100%);
     aspect-ratio: 1;
-    filter: brightness(0.6);
+    filter: brightness(var(--dim));
     outline: 0 solid transparent;
     /* transparent so the frame fades out instead of snapping off */
     outline-offset: 0;
@@ -274,8 +282,9 @@ body {
         width: 100%;
     }
 
-    /* line the tags up with the top of the cover */
-    .credits-list {
+    /* line the tags up with the top of the cover, and a person's albums with their name */
+    .credits-list,
+    .person-albums {
         margin-top: 0;
     }
 }
@@ -363,7 +372,6 @@ body {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
-    /* an open tile grows on its own, without stretching its row-mates */
     gap: 6px;
     list-style: none;
     padding: 0;
@@ -391,7 +399,7 @@ body {
     padding: 4px 10px;
     border-radius: 6px;
     background-color: var(--c);
-    filter: brightness(.65);
+    filter: brightness(var(--dim-half));
     color: black;
     font-size: 13px;
     font-weight: bold;
@@ -406,59 +414,130 @@ body {
     color: var(--c);
 }
 
-/* hovered, open, or on the chord under the mouse: full brightness with a white ring, inset so
+/* hovered or on the chord under the mouse: full brightness with a white ring, inset so
    the tile doesn't change size and the list can't clip it. after .no-chords, so its ring gets replaced */
 .credit:hover,
-.credit.open,
 .credit.highlighted {
     filter: none;
     box-shadow: inset 0 0 0 2px white;
 }
 
-/* folded shut until the tile is clicked open, then it opens inside the tile and pushes the rows below down.
-   a grid row going from 0fr to 1fr animates to the content's height (height: auto can't be animated) */
-.credit-details {
-    display: grid;
-    grid-template-rows: 0fr;
-    width: 0;
-    /* don't let the details widen the tile... */
-    min-width: 100%;
-    /* ...just fill whatever width it already has */
-    font-weight: normal;
-    opacity: 0;
-    transition: grid-template-rows .2s, opacity .2s;
+/* centered in the tile, since flex-grow stretches tiles wider than their names */
+.credit-name {
+    display: block;
+    text-align: center;
 }
 
-.credit.open .credit-details {
-    grid-template-rows: 1fr;
-    opacity: 1;
+/* a person's view of the side panel: their name, then every album they're on */
+.person-info h2 {
+    margin: 0;
 }
 
-.credit-details-inner {
+/* the count on the left, the show all toggle on the right */
+.person-count {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+.person-count p {
+    margin: 0;
+    opacity: var(--dim-half);
+}
+
+.person-all {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    background: none;
+    border: 1px solid white;
+    border-radius: 6px;
+    color: white;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color .15s, color .15s;
+}
+
+.person-all:hover,
+.person-all[aria-pressed="true"] {
+    background-color: white;
+    color: black;
+}
+
+/* scrolls on its own, like the tags, so the name stays in view */
+.person-albums {
+    flex: 1;
     min-height: 0;
-    /* lets the 0fr row actually shrink to nothing */
-    overflow: hidden;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.credit-details-inner>span {
+/* one row per album, dimmed until hovered. --c, the album's color, is set on each row in personAlbumRow */
+.person-album {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 1px transparent;
+    cursor: pointer;
+    transition: box-shadow .15s;
+}
+
+.person-album-cover {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 3px;
+    filter: brightness(var(--dim));
+    transition: filter .15s;
+}
+
+.person-album:hover,
+.person-album.highlighted {
+    box-shadow: inset 0 0 0 2px var(--c);
+}
+
+.person-album:hover .person-album-cover,
+.person-album.highlighted .person-album-cover {
+    filter: none;
+}
+
+.person-album-text {
+    min-width: 0;
+}
+
+.person-album-text>span {
     display: block;
 }
 
-.credit-roles {
-    padding-top: 4px;
+.person-album-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--c);
+}
+
+.person-album-artist {
+    font-size: 13px;
+}
+
+.person-album-roles {
+    padding-top: 2px;
     font-size: 12px;
+    opacity: var(--dim-half);
 }
 
-.credit-tracks {
+.person-album-tracks {
     font-size: 11px;
-    opacity: .7;
-}
-
-.credit-category {
-    padding-bottom: 2px;
-    font-size: 10px;
-    text-transform: uppercase;
-    opacity: .7;
+    opacity: var(--dim-half);
 }
 
 
@@ -476,7 +555,7 @@ body {
 }
 
 .crate-closed .crate-slide {
-    transform: translateY(-100%);
+    transform: translateX(100%);
 }
 
 /* one button at a time: the crate only opens while the side panel is closed, and the side panel waits for it */
@@ -500,13 +579,13 @@ body {
     visibility: hidden;
 }
 
-/* a circle centered on the panel. the crate's bottom edge is the bottom of the screen when it's open
-   and the top when it's closed, so this keeps the button just inside. the arrow points where the crate will go */
+/* a circle centered on the crate's left edge, like the side panel's button, and just below it so
+   the two don't overlap while both panels are closed. the arrow points where the crate will go */
 .crate-toggle {
     position: absolute;
-    left: 50%;
-    top: 100%;
-    translate: -50% calc(-100% - 8px);
+    left: 0;
+    top: calc(50% + 48px);
+    translate: -50% -50%;
     display: grid;
     place-items: center;
     width: 32px;
@@ -521,8 +600,9 @@ body {
     transition: background-color .15s, color .15s, translate .3s;
 }
 
+/* the closed crate's edge is the edge of the screen, so this keeps the button just inside it */
 .crate-closed .crate-toggle {
-    translate: -50% 8px;
+    translate: -100% -50%;
 }
 
 .crate-toggle:hover {
@@ -538,17 +618,16 @@ body {
     stroke-width: 3;
     stroke-linecap: round;
     stroke-linejoin: round;
-    rotate: -90deg;
     transition: rotate .3s;
 }
 
 .crate-closed .crate-toggle svg {
-    rotate: 90deg;
+    rotate: 180deg;
 }
 
 .crate-info {
     flex: none;
-    padding: var(--padding) var(--padding) 12px;
+    padding: var(--padding) var(--padding) 4px;
 }
 
 .crate-info p {
@@ -587,35 +666,56 @@ body {
     color: black;
 }
 
-/* always one line tall, even when it's empty, so the list doesn't move when the text changes */
-.crate-readout {
-    min-height: 1lh;
-    margin-top: 4px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    font-size: 13px;
-    opacity: .75;
+/* finder's list view: the cover, then a column each for the title, artist, and release date.
+   the column labels and every row share these columns, so they line up */
+.crate-columns,
+.sleeve {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 3fr) minmax(0, 2fr) 11ch;
+    align-items: center;
+    gap: 12px;
+    padding: 0 8px;
 }
 
-/* the same size as the side panel's cover, with only a --strip of each one showing.
-   the padding at the bottom is room for the last cover to slide into,
-   so hovering near the end doesn't change how far the list can scroll */
-.crate-list {
-    --sleeve: min(50vh, 100cqw);
-    --strip: 56px;
-    --hidden: calc(var(--sleeve) - var(--strip));
+.crate-columns {
+    margin-top: 16px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #333;
+    font-size: 11px;
+}
 
+.crate-columns > * {
+    opacity: var(--dim-half);
+}
+
+/* the title, artist, and released labels sort the list. the one it's sorted by is bright, with an arrow */
+.crate-sort {
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: white;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.crate-sort:hover,
+.crate-sort.on {
+    opacity: 1;
+}
+
+.crate-sort[data-dir="up"]::after {
+    content: " ▴";
+}
+
+.crate-sort[data-dir="down"]::after {
+    content: " ▾";
+}
+
+.crate-list {
     flex: 1;
     min-height: 0;
-    container-type: inline-size;
-    /* keeps a hovered cover's z-index in here, so the crate's button stays on top */
-    isolation: isolate;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-sizing: border-box;
-    padding: 12px var(--padding) calc(var(--hidden) + var(--padding));
+    padding: 0 var(--padding) var(--padding);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
@@ -623,68 +723,74 @@ body {
 }
 
 .sleeve {
-    position: relative;
-    flex: none;
-    display: block;
-    width: var(--sleeve);
-    aspect-ratio: 1;
-    margin-bottom: calc(var(--hidden) * -1);
-    padding: 0;
+    width: 100%;
+    padding-top: 4px;
+    padding-bottom: 4px;
     border: 0;
-    background-color: #222;
-    box-shadow: 0 -6px 10px rgba(0, 0, 0, .7);
-    outline: 0 solid transparent;
-    outline-offset: 0;
+    border-radius: 4px;
+    background-color: transparent;
+    color: white;
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
     cursor: pointer;
-    transition: transform .25s, outline-offset .2s;
 }
 
-.sleeve:last-child {
-    margin-bottom: 0;
+.sleeve:hover,
+.sleeve:focus-visible {
+    outline: 0;
+    background-color: #222;
 }
 
 .sleeve img {
     display: block;
-    width: 100%;
-    height: 100%;
+    width: 32px;
+    height: 32px;
+    background-color: #222;
     /* color only ever means selected, same as the chords */
-    filter: grayscale(1) brightness(.4);
+    filter: grayscale(1) brightness(var(--dim-deep));
     transition: filter .2s;
 }
 
 .sleeve:hover img,
 .sleeve:focus-visible img {
-    filter: grayscale(1) brightness(.75);
+    filter: grayscale(1) brightness(var(--dim-half));
 }
 
 .sleeve.on img {
     filter: none;
 }
 
-/* same frame as the side panel's cover, in this album's color. on the sleeve, since the filter on the img
-   would turn it grey. over its neighbors, so the frame isn't cut off */
-.sleeve:hover,
-.sleeve:focus-visible {
-    z-index: 1;
-    outline: 3px solid var(--c);
-    outline-offset: 5px;
+.sleeve span {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    opacity: var(--dim-half);
 }
 
-/* slides everything after this cover down, so all of it shows */
-.sleeve:hover~.sleeve,
-.sleeve:focus-visible~.sleeve {
-    transform: translateY(var(--hidden));
+.sleeve.on span {
+    opacity: 1;
 }
 
-/* the side panel's cell on narrow screens. it still has to come from above the screen */
+.sleeve-artist,
+.sleeve-date {
+    color: #aaa;
+}
+
+/* the side panel's cell on narrow screens. it still slides in from the right */
 @media screen and (max-width: 768px) {
     .crate-slide {
         grid-column: 1;
         grid-row: 2;
     }
 
-    .crate-closed .crate-slide {
-        transform: translateY(-200%);
+    /* the side panel's button is at the top here, so this one can sit in the middle */
+    .crate-toggle {
+        top: 50%;
     }
 
+    /* the open crate's left edge is the edge of the screen here too, so this keeps the button just inside it */
+    .page:not(.crate-closed) .crate-toggle {
+        translate: 0 -50%;
+    }
 }

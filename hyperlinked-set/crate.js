@@ -1,29 +1,54 @@
-// the record crate: every album's cover in a panel that drops over the side panel.
-// click a cover to add it to the ring or take it off
+// the record crate: every album as a row, like finder's list view, in a panel that slides in over the side panel.
+// click a row to add it to the ring or take it off
 
 const crateToggle = document.querySelector(".crate-toggle");
 const crateCount = document.querySelector(".crate-count");
 const crateAll = document.querySelector(".crate-all");
-const crateReadout = document.querySelector(".crate-readout");
 const crateList = document.querySelector(".crate-list");
+const crateSorts = document.querySelectorAll(".crate-sort");
+
+// how the crate is sorted, set by the buttons above the columns. starts oldest first
+const sorters = {
+    title: (a, b) => a.album.localeCompare(b.album),
+    artist: (a, b) => a.artist.localeCompare(b.artist),
+    date: (a, b) => new Date(a.release_date) - new Date(b.release_date),
+};
+let crateSort = { key: "date", descending: false };
 
 function onRing(rank) {
     return ringRanks.includes(rank);
 }
 
+// "November 7, 2025" in albums.json, shortened to "Nov 7, 2025"
+function shortDate(releaseDate) {
+    return new Date(releaseDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function makeCell(className, text) {
+    const cell = document.createElement("span");
+    cell.className = className;
+    cell.textContent = text;
+    return cell;
+}
+
+// the cover, then a column each for the title, artist, and release date
 function makeSleeve(album) {
     const sleeve = document.createElement("button");
     sleeve.type = "button";
     sleeve.className = "sleeve";
     sleeve.dataset.rank = album.rank;
-    sleeve.style.setProperty("--c", `var(--album-${album.rank}, white)`);
-    sleeve.setAttribute("aria-label", album.album + ", " + album.artist);
-    sleeve.append(document.createElement("img"));
+    const img = document.createElement("img");
+    img.alt = "";
+    sleeve.append(
+        img,
+        makeCell("sleeve-title", album.album),
+        makeCell("sleeve-artist", album.artist),
+        makeCell("sleeve-date", shortDate(album.release_date)));
     return sleeve;
 }
 
 // covers load as they come into view, since that's up to 50 more lookups than the ring needs.
-// the color loads too, so the hover frame and the chords are ready if it gets added
+// the color loads too, so the chords are ready if it gets added
 function fillSleeve(sleeve) {
     const album = getAlbum(Number(sleeve.dataset.rank));
     getCover(album).then(src => {
@@ -32,10 +57,34 @@ function fillSleeve(sleeve) {
     });
 }
 
+// put the sleeves in crateSort's order, and mark which button it came from
+function sortCrate() {
+    const order = [...albums].sort(sorters[crateSort.key]);
+    if (crateSort.descending) {
+        order.reverse();
+    }
+    const sleeves = new Map([...crateList.children].map(sleeve => [Number(sleeve.dataset.rank), sleeve]));
+    crateList.append(...order.map(album => sleeves.get(album.rank)));
+
+    crateSorts.forEach(button => {
+        const on = button.dataset.key === crateSort.key;
+        button.classList.toggle("on", on);
+        button.dataset.dir = on ? (crateSort.descending ? "down" : "up") : "";
+    });
+}
+
+// the button that's already on flips the order. a new one starts A to Z, or oldest first
+crateSorts.forEach(button => button.addEventListener("click", () => {
+    const key = button.dataset.key;
+    crateSort = { key, descending: key === crateSort.key && !crateSort.descending };
+    sortCrate();
+}));
+
 // make the sleeves the first time the crate opens
 function buildCrate() {
-    const sleeves = [...albums].sort((a, b) => a.rank - b.rank).map(makeSleeve);
+    const sleeves = albums.map(makeSleeve);
     crateList.append(...sleeves);
+    sortCrate();
 
     const observer = new IntersectionObserver(entries => {
         entries.filter(entry => entry.isIntersecting).forEach(entry => {
@@ -77,10 +126,8 @@ function toggleAlbum(rank) {
     hoverSleeve(rank);
 }
 
-// show what's under the mouse: its name here, and its chords if it's on the ring
+// show the chords of what's under the mouse, if it's on the ring
 function hoverSleeve(rank) {
-    const album = getAlbum(rank);
-    crateReadout.textContent = album.album + " — " + album.artist;
     previewAlbum(onRing(rank) ? rank : null);
 }
 
@@ -98,7 +145,6 @@ function setCrateClosed(closed) {
         previewAlbum(null);
     } else {
         updateCrate();
-        crateReadout.textContent = "";
     }
 }
 
@@ -129,10 +175,7 @@ crateList.addEventListener("mouseover", event => {
     }
 });
 
-crateList.addEventListener("mouseleave", () => {
-    crateReadout.textContent = "";
-    previewAlbum(null);
-});
+crateList.addEventListener("mouseleave", () => previewAlbum(null));
 
 crateList.addEventListener("focusin", event => {
     if (event.target.matches(".sleeve:focus-visible")) {

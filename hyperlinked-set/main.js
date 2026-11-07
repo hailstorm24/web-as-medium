@@ -1,9 +1,11 @@
 let albums = [];      // all 100 albums from albums.json
 let similarityMatrix = null;  // how alike every pair of albums sounds, from albums.json
 let currentRank = 12;  // which album the side panel is showing
-let currentPerson = null;  // whose credit tile is open, if anyone's
+let currentPerson = null;  // whose view the side panel is showing instead of the album's, if anyone's
 let hoveredPerson = null;  // whose chord the mouse is on, if anyone's
-let hoveredRank = null;  // which album's cover the mouse is on, if any
+let hoveredRank = null;  // which album's cover (or row in a person's view) the mouse is on, if any
+let hoveredChordRanks = [];  // the albums at both ends of the chord the mouse is on, if any
+let showingAllAlbums = false;  // does a person's view list every album they're on, not just the ones on the ring?
 let showingAll = false;  // has the panel closed with nothing picked since? the selection comes back when it reopens
 
 const page = document.querySelector(".page");
@@ -132,17 +134,57 @@ function getAlbumColor(img) {
         return null;  // black & white cover: keep the default color
     }
 
-    let r = best.r / best.count;
-    let g = best.g / best.count;
-    let b = best.b / best.count;
-
-    // brighten dark colors so the frame shows up on the black background
-    const scale = Math.max(1, 200 / Math.max(r, g, b));
-    r = Math.min(255, Math.round(r * scale));
-    g = Math.min(255, Math.round(g * scale));
-    b = Math.min(255, Math.round(b * scale));
-
+    const [r, g, b] = ensureContrast(best.r / best.count, best.g / best.count, best.b / best.count);
     return `rgb(${r}, ${g}, ${b})`;
+}
+
+// how bright a color looks to the eye, from 0 (black) to 1 (white). the wcag formula:
+// green looks much brighter than red, and red brighter than blue, at the same value
+function luminance(r, g, b) {
+    const linear = (c) => {
+        c /= 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+}
+
+// contrast ratio against black, from 1 (black) to 21 (white). 4.5 is the wcag minimum for text
+function contrastWithBlack(r, g, b) {
+    return (luminance(r, g, b) + 0.05) / 0.05;
+}
+
+const minContrast = 7;
+
+// brighten a color until it stands out against black.
+// first scale it up, which keeps it just as colorful; if it's still too dark at full
+// brightness (deep blues and purples), mix in just enough white to get there
+function ensureContrast(r, g, b) {
+    const scale = 255 / Math.max(r, g, b, 1);
+    if (contrastWithBlack(r, g, b) < minContrast) {
+        // the smallest scale-up that's enough, found by halving the range each step
+        let low = 1, high = scale;
+        for (let i = 0; i < 12; i++) {
+            const mid = (low + high) / 2;
+            if (contrastWithBlack(r * mid, g * mid, b * mid) < minContrast) low = mid;
+            else high = mid;
+        }
+        r *= high; g *= high; b *= high;
+    }
+
+    if (contrastWithBlack(r, g, b) < minContrast) {
+        // the smallest amount of white that's enough
+        let low = 0, high = 1;
+        for (let i = 0; i < 12; i++) {
+            const mid = (low + high) / 2;
+            const mix = (c) => c + (255 - c) * mid;
+            if (contrastWithBlack(mix(r), mix(g), mix(b)) < minContrast) low = mid;
+            else high = mid;
+        }
+        const mix = (c) => c + (255 - c) * high;
+        r = mix(r); g = mix(g); b = mix(b);
+    }
+
+    return [r, g, b].map((c) => Math.min(255, Math.ceil(c)));
 }
 
 // read this album's color from its cover, and set it on the root as --album-[rank].
@@ -228,13 +270,6 @@ function creditsList(album) {
     const items = getAlbumCredits(album).map(c => `
         <li class="credit" style="--c: var(--${getPersonColor(c, album.rank)}, white)">
             <span class="credit-name">${c.name}</span>
-            <span class="credit-details">
-                <span class="credit-details-inner">
-                    <span class="credit-roles">${[...c.roles].join(", ")}</span>
-                    <span class="credit-tracks">${c.allTracks.size === album.tracks.length ? "all tracks" : c.allTracks.size + " of " + album.tracks.length + " tracks"}</span>
-                    <span class="credit-category">${c.categories.map(cat => creditCategories[cat]).join(" · ")}</span>
-                </span>
-            </span>
         </li>
     `).join("");
 
@@ -245,11 +280,11 @@ function tileName(tile) {
     return tile.querySelector(".credit-name").textContent;
 }
 
-// selects this person, or goes back to the album if they're already selected.
-// showSelection opens their tile and closes any other
+// selects this person and switches the side panel to them
 function selectPerson(name) {
-    currentPerson = name === currentPerson && !showingAll ? null : name;
+    currentPerson = name;
     showingAll = false;
+    showPerson(name);
     showSelection();
 }
 
@@ -261,18 +296,40 @@ function previewPerson(name) {
     }
 }
 
-// shows this album's chords on the ring without selecting it. null goes back to the selection
+// shows this album's chords on the ring without selecting it, or just the selected person's chords
+// on it, in a person's view. null goes back to the selection
 function previewAlbum(rank) {
-    hoveredRank = rank;
-    showSelection();
+    if (rank !== hoveredRank) {
+        hoveredRank = rank;
+        showSelection();
+    }
 }
 
-// listening on the side panel, since its contents get replaced for every album
+// listening on the side panel, since its contents get replaced for every album and person
 sidePanel.addEventListener("click", event => {
     const tile = event.target.closest(".credit");
+    const row = event.target.closest(".person-album");
     if (tile) {
         selectPerson(tileName(tile));
+    } else if (row) {
+        showAlbum(Number(row.dataset.rank));
+    } else if (event.target.closest(".person-all")) {
+        showingAllAlbums = !showingAllAlbums;
+        showPerson(currentPerson);
     }
+});
+
+// hovering a tile shows that person's chords, the same as hovering one of their chords lights up the tile.
+// hovering an album in a person's view shows their chords on it, the same as hovering its cover on the ring
+sidePanel.addEventListener("mouseover", event => {
+    const tile = event.target.closest(".credit");
+    const row = event.target.closest(".person-album");
+    previewPerson(tile ? tileName(tile) : null);
+    previewAlbum(row ? Number(row.dataset.rank) : null);
+});
+sidePanel.addEventListener("mouseleave", () => {
+    previewPerson(null);
+    previewAlbum(null);
 });
 
 // where an album can be listened to. color fills the listen button on hover,
@@ -354,5 +411,57 @@ function showAlbum(rank) {
         }
     });
 
+    loadCovers();
+}
+
+// every album this person is on, with what they did on it, by rank
+function getPersonAlbums(name) {
+    return albums
+        .map(album => ({ album, person: getAlbumPeople(album).find(person => person.name === name) }))
+        .filter(entry => entry.person)
+        .sort((a, b) => a.album.rank - b.album.rank);
+}
+
+function personAlbumRow({ album, person }) {
+    const roles = [...(person.tracks.artist ? ["Artist"] : []), ...person.roles];
+    const tracks = new Set(Object.values(person.tracks).flatMap(set => [...set])).size;
+    return `
+        <li class="person-album" data-rank="${album.rank}"
+            style="--c: var(--album-${album.rank}, white)">
+            <img class="person-album-cover" data-cover="${album.rank}" alt="${album.album} cover">
+            <span class="person-album-text">
+                <span class="person-album-title">${album.album}</span>
+                <span class="person-album-artist">${album.artist}</span>
+                <span class="person-album-roles">${roles.join(", ")}</span>
+                <span class="person-album-tracks">${tracks} of ${album.tracks.length}</span>
+            </span>
+        </li>
+    `;
+}
+
+// fill the side panel with one person: the albums on the ring they're credited on, or every album
+// with the toggle
+function showPerson(name) {
+    const allEntries = getPersonAlbums(name);
+    const ringEntries = allEntries.filter(entry => ringRanks.includes(entry.album.rank));
+    const entries = showingAllAlbums ? allEntries : ringEntries;
+    // no toggle when every one of their albums is already on the ring
+    const toggle = ringEntries.length === allEntries.length ? "" : `
+        <button class="person-all" type="button" aria-pressed="${showingAllAlbums}">
+            ${showingAllAlbums ? "Selected only" : "Show all"}
+        </button>
+    `;
+
+    sidePanel.innerHTML = `
+        <div class="person-info">
+            <h2>${name}</h2>
+            <div class="person-count">
+                <p>${entries.length} album${entries.length === 1 ? "" : "s"}</p>
+                ${toggle}
+            </div>
+        </div>
+        <ul class="person-albums">${entries.map(personAlbumRow).join("")}</ul>
+    `;
+    sidePanel.scrollTop = 0;
     loadCovers();
 }
