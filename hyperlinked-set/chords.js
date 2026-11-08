@@ -174,12 +174,8 @@ function chordAt(event) {
     return drawnChords[event.target.dataset.index];
 }
 
-// selects the person on this chord and opens the panel to their view. a chord that doesn't touch the album being shown
-// moves to the higher ranked of its two albums first, since a person is always selected on an album
+// opens the person on this chord in the panel, the same way clicking a cover opens its album
 function clickChord(chord) {
-    if (!chordTouches(chord, currentRank)) {
-        showAlbum(Math.min(...chord.ends.map(end => end.rank)));
-    }
     selectPerson(chord.person);
     setPanelClosed(false);
 }
@@ -188,8 +184,15 @@ function clickChord(chord) {
 hitLayer.addEventListener("mouseover", event => previewChord(chordAt(event)));
 hitLayer.addEventListener("mouseleave", () => previewChord(null));
 
-// shows this chord's person on the ring, and remembers its albums so a person's view can light up their rows
-function previewChord(chord) {
+// shows this chord's person on the ring, and remembers its albums so a person's view can light up their rows.
+// the redraw moves the hovered path to the top of its tier, which makes the browser fire mouseover on it again,
+// so a chord that's already showing has to be skipped or it redraws forever and swallows the click
+let hoveredChord = null;
+function previewChord(chord = null) {
+    if (chord === hoveredChord) {
+        return;
+    }
+    hoveredChord = chord;
     hoveredChordRanks = chord ? chord.ends.map(end => end.rank) : [];
     hoveredPerson = null;  // so previewPerson redraws even when moving between two of the same person's chords
     previewPerson(chord ? chord.person : null);

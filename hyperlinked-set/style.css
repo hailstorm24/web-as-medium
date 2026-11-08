@@ -156,17 +156,19 @@ body {
     transition: transform .3s;
 }
 
+/* the side panel slides down out of the way and back up, on any screen; the crate slides sideways */
 .panel-closed .panel-slide {
-    transform: translateX(100%);
+    transform: translateY(100%);
 }
 
-/* a circle centered on the side panel's edge. it fits inside the two panels' padding, so it never
-   covers anything. the arrow points where the panel will go. black with a white ring, since the
-   main panel can be any color */
+/* a circle centered on the side panel's top edge. it fits inside the panels' padding, so it never
+   covers anything. the arrow points where the panel will go, and the whole button is turned a
+   quarter turn so it points down and up. black with a white ring, since the main panel can be any color */
 .panel-toggle {
     position: absolute;
-    left: 0;
-    top: 50%;
+    left: 50%;
+    top: 0;
+    rotate: 90deg;
     translate: -50% -50%;
     display: grid;
     place-items: center;
@@ -182,9 +184,9 @@ body {
     transition: background-color .15s, color .15s, translate .3s;
 }
 
-/* the closed panel's edge is the edge of the screen, so this keeps the button just inside it */
+/* the closed panel's edge is the bottom of the screen, so this keeps the button just inside it */
 .panel-closed .panel-toggle {
-    translate: -100% -50%;
+    translate: -50% -100%;
 }
 
 .panel-toggle:hover {
@@ -234,6 +236,17 @@ body {
 
 /* on wide screens, center the cover, with the title lined up under its left edge */
 @media screen and (min-width: 769px) {
+
+    /* the open panel's top edge is the top of the screen here, so the button hangs just inside it
+       instead of straddling it, with room made for it above the cover */
+    .side-panel {
+        padding-top: calc(var(--padding) + 20px);
+    }
+
+    .page:not(.panel-closed) .panel-toggle {
+        translate: -50% 4px;
+    }
+
     .album-info {
         width: min(50vh, 100%);
         /* same width as the cover, so centering the block centers the cover
@@ -261,21 +274,6 @@ body {
         grid-template-rows: minmax(0, 1fr);
         /* one row, exactly the panel's height, so a long tag list can't stretch it */
         gap: 24px;
-    }
-
-    /* the panel is below the record here, so everything turns a quarter turn */
-    .panel-closed .panel-slide {
-        transform: translateY(100%);
-    }
-
-    .panel-toggle {
-        left: 50%;
-        top: 0;
-        rotate: 90deg;
-    }
-
-    .panel-closed .panel-toggle {
-        translate: -50% -100%;
     }
 
     .side-panel .cover {
@@ -579,12 +577,12 @@ body {
     visibility: hidden;
 }
 
-/* a circle centered on the crate's left edge, like the side panel's button, and just below it so
-   the two don't overlap while both panels are closed. the arrow points where the crate will go */
+/* a circle centered on the crate's left edge, like the side panel's button. the side panel's
+   button is on the top or bottom edge, so the two never overlap. the arrow points where the crate will go */
 .crate-toggle {
     position: absolute;
     left: 0;
-    top: calc(50% + 48px);
+    top: 50%;
     translate: -50% -50%;
     display: grid;
     place-items: center;
@@ -782,11 +780,6 @@ body {
     .crate-slide {
         grid-column: 1;
         grid-row: 2;
-    }
-
-    /* the side panel's button is at the top here, so this one can sit in the middle */
-    .crate-toggle {
-        top: 50%;
     }
 
     /* the open crate's left edge is the edge of the screen here too, so this keeps the button just inside it */
