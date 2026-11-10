@@ -2,6 +2,7 @@
 :root {
     --frame-color: white;
     --padding: 24px;
+    --toggle-room: calc(var(--padding) + 20px);  /* the side panel's and crate's padding on the crate button's edge */
 
     /* how bright anything resting or unselected is, from 0 (gone) to 1 (no dimming).
        raise it for more contrast on the black background. everything dimmed is derived from it:
@@ -9,14 +10,6 @@
     --dim: 0.5;
     --dim-half: calc((1 + var(--dim)) / 2);  /* halfway back to full: hovered or linked */
     --dim-deep: calc(var(--dim) * .5);  /* dimmer still: the crate's unselected covers */
-
-    /* the colors in personColors, shared by the credit tiles and the chords.
-       the credit categories are named after the keys in albums.json */
-    --composition_lyrics: #B9781D;
-    --production_engineering: #B91D51;
-    --performers: #B91D9F;
-    --multiple: #B9511D;
-    --artist: #1DB954;
 
     /* what chords fade toward: dark for selected ones, and a lighter one
        for the background, which would disappear on black at low opacity */
@@ -32,15 +25,15 @@ body {
 .page {
     display: grid;
     grid-template-columns: 13fr 7fr;
+    grid-template-rows: minmax(0, 1fr);
     height: 100vh;
-    /* clip, not hidden: a closed panel has to be impossible to scroll to, even from a script */
     overflow: clip;
-    /* always the main panel's color, so it's already there when the side panel slides away */
-    background-color: var(--frame-color);
-    transition: background-color .3s;
 }
 
 .main-panel {
+    /* placed, not left to fill the next free cell, since the ? button shares it */
+    grid-column: 1;
+    grid-row: 1;
     background-color: var(--frame-color);
     transition: background-color .3s;
     padding: var(--padding);
@@ -50,39 +43,21 @@ body {
     min-height: 0;
 }
 
-.main-panel .diagram {
+/* the record: a black circle as big as the main panel allows */
+.diagram {
     grid-area: 1 / 1;
     width: min(100cqw, 100cqh);
     aspect-ratio: 1;
-}
-
-/* later in the html, so it's drawn over the record */
-.diagram {
     background-color: black;
     border-radius: 50%;
     position: relative;
-    border: rebeccapurple bold 1px;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 .diagram .ring {
     width: 100%;
     height: 100%;
     display: block;
-    /* animation: spin 20s linear infinite paused; */
 }
-
-/* .diagram:hover .ring {
-    animation-play-state: running;
-} */
 
 /* the album covers around the edge: dimmed like the side panel cover,
    and full brightness + a little bigger on hover or when it's the album being shown */
@@ -136,87 +111,14 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: visibility .3s;
-}
-
-/* hidden as well as slid away, so nothing in it can be tabbed to */
-.panel-closed .side-panel {
-    visibility: hidden;
-}
-
-/* the side panel and its button, which move together */
-.panel-slide {
-    position: relative;
+    /* the right column, or the bottom row on narrow screens. the crate slides over it */
     grid-column: 2;
     grid-row: 1;
-    display: grid;
-    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
-    transition: transform .3s;
-}
-
-/* the side panel slides down out of the way and back up, on any screen; the crate slides sideways */
-.panel-closed .panel-slide {
-    transform: translateY(100%);
-}
-
-/* a circle centered on the side panel's top edge. it fits inside the panels' padding, so it never
-   covers anything. the arrow points where the panel will go, and the whole button is turned a
-   quarter turn so it points down and up. black with a white ring, since the main panel can be any color */
-.panel-toggle {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    rotate: 90deg;
-    translate: -50% -50%;
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    box-sizing: border-box;
-    background-color: black;
-    border: 2px solid white;
-    border-radius: 50%;
-    color: white;
-    cursor: pointer;
-    transition: background-color .15s, color .15s, translate .3s;
-}
-
-/* the closed panel's edge is the bottom of the screen, so this keeps the button just inside it */
-.panel-closed .panel-toggle {
-    translate: -50% -100%;
-}
-
-.panel-toggle:hover {
-    background-color: white;
-    color: black;
-}
-
-.panel-toggle svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 3;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition: rotate .3s;
-}
-
-.panel-closed .panel-toggle svg {
-    rotate: 180deg;
 }
 
 .side-panel .cover {
-    --g: 10px;
-    /* gap between the cover and the frame on hover */
-    --b: 4px;
-    /* frame thickness */
-    --c: var(--frame-color);
-    /* frame color */
-
     width: min(50vh, 100%);
     aspect-ratio: 1;
     filter: brightness(var(--dim));
@@ -226,25 +128,21 @@ body {
     transition: .3s;
 }
 
-/* on hover: brighten the cover and slide a frame out around it */
+/* on hover: brighten the cover and slide a 4px frame out to 10px around it */
 .side-panel .cover:hover {
     filter: none;
-    outline-width: var(--b);
-    outline-offset: var(--g);
-    outline-color: var(--c);
+    outline-width: 4px;
+    outline-offset: 10px;
+    outline-color: var(--frame-color);
 }
 
 /* on wide screens, center the cover, with the title lined up under its left edge */
 @media screen and (min-width: 769px) {
 
-    /* the open panel's top edge is the top of the screen here, so the button hangs just inside it
-       instead of straddling it, with room made for it above the cover */
-    .side-panel {
-        padding-top: calc(var(--padding) + 20px);
-    }
-
-    .page:not(.panel-closed) .panel-toggle {
-        translate: -50% 4px;
+    /* room for the crate button along the bottom */
+    .side-panel,
+    .crate-list {
+        padding-bottom: var(--toggle-room);
     }
 
     .album-info {
@@ -259,16 +157,13 @@ body {
 @media screen and (max-width: 768px) {
     .page {
         grid-template-columns: 1fr;
-        grid-template-rows: 1fr 1fr;
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     }
 
-    .panel-slide {
+    /* the bottom row, with the cover + title on the left and tags on the right */
+    .side-panel {
         grid-column: 1;
         grid-row: 2;
-    }
-
-    /* cover + title on the left, tags on the right */
-    .side-panel {
         display: grid;
         grid-template-columns: 1fr 2fr;
         grid-template-rows: minmax(0, 1fr);
@@ -280,6 +175,15 @@ body {
         width: 100%;
     }
 
+    /* the about text spans the whole panel, and scrolls on its own if it doesn't fit */
+    .side-panel:has(.about-info) {
+        grid-template-columns: 1fr;
+    }
+
+    .about-info {
+        overflow-y: auto;
+    }
+
     /* line the tags up with the top of the cover, and a person's albums with their name */
     .credits-list,
     .person-albums {
@@ -287,13 +191,11 @@ body {
     }
 }
 
+/* on very narrow screens, the cover gets half the panel */
 @media screen and (max-width: 512px) {
-
     .side-panel {
-        display: grid;
         grid-template-columns: 1fr 1fr;
     }
-
 }
 
 /* the title on the left, the listen button on the right.
@@ -311,53 +213,74 @@ body {
     margin: 0;
 }
 
-/* a white circle that fills with --c from the bottom on hover, while the icon flips and turns white.
-   --c is set on each button in listenButton */
-.listen-button {
+/* the listen button and the ? button: circles that fill with a color rising from the bottom
+   on hover, while what's inside flips and changes color */
+.listen-button,
+.about-toggle {
     position: relative;
-    flex-shrink: 0;
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
     box-sizing: border-box;
-    background-color: white;
-    border: 2px solid white;
     border-radius: 50%;
     overflow: hidden;
-    color: black;
 }
 
-/* sits just below the circle until hovered, hidden by the overflow */
-.listen-button::before {
+/* the fill: sits just below the circle until hovered, hidden by the overflow */
+.listen-button::before,
+.about-toggle::before {
     content: "";
     position: absolute;
     top: 100%;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--c);
     transition: top .5s;
 }
 
-.listen-button svg {
+.listen-button:hover::before,
+.listen-button:focus-visible::before,
+.about-toggle:hover::before,
+.about-toggle:focus-visible::before {
+    top: 0;
+}
+
+/* over the fill */
+.listen-button svg,
+.about-toggle span {
     position: relative;
-    /* over the fill */
-    width: 22px;
-    height: 22px;
-    fill: currentColor;
     transition: .5s;
 }
 
-.listen-button:hover::before,
-.listen-button:focus-visible::before {
-    top: 0;
+.listen-button:hover svg,
+.listen-button:focus-visible svg,
+.about-toggle:hover span,
+.about-toggle:focus-visible span {
+    transform: rotateY(360deg);
+}
+
+/* white, filling with --c, the service's color, set on each button in listenButton. the icon turns white */
+.listen-button {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    background-color: white;
+    border: 2px solid white;
+    color: black;
+}
+
+.listen-button::before {
+    background-color: var(--c);
+}
+
+.listen-button svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
 }
 
 .listen-button:hover svg,
 .listen-button:focus-visible svg {
     color: white;
-    transform: rotateY(360deg);
 }
 
 .side-panel .artist {
@@ -426,9 +349,50 @@ body {
     text-align: center;
 }
 
-/* a person's view of the side panel: their name, then every album they're on */
-.person-info h2 {
-    margin: 0;
+/* the ? in the top left corner that opens the about view, just inside the corner of the screen.
+   black, with the ? in the main panel's color, filling with the main panel's color while the ? turns black.
+   the black ring keeps it outlined once it's filled */
+.about-toggle {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    align-self: start;
+    translate: 6px 6px;
+    z-index: 1;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background-color: black;
+    border: 0;
+    color: var(--frame-color);
+    font: bold 16px sans-serif;
+    cursor: pointer;
+    transition: background-color .3s;
+}
+
+.about-toggle::before {
+    background-color: var(--frame-color);
+}
+
+/* the black ring, drawn over the fill so it stays once the button is filled */
+.about-toggle::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 2px black;
+}
+
+.about-toggle:hover span,
+.about-toggle:focus-visible span {
+    color: black;
+}
+
+/* the about view: the title, then what the diagram is */
+.about-text {
+    margin: 12px 0 0;
+    font-size: 14px;
+    line-height: 1.5;
 }
 
 /* the count on the left, the show all toggle on the right */
@@ -539,27 +503,21 @@ body {
 }
 
 
-/* the crate and its button, which move together. in the same grid cell as the
-   side panel, so it's always the same shape, and later in the html, so it's drawn over it */
+/* the crate's frame: the side panel's grid cell, later in the html so it's drawn over it.
+   it clips the crate, so the crate slides in and out of the cell without crossing the record.
+   positioned so it's also drawn over the cover and tiles, whose filters lift them above unpositioned boxes.
+   the frame itself lets the mouse through, so the side panel under it can still be scrolled and clicked;
+   only the crate takes the mouse, and only while it's open */
 .crate-slide {
     position: relative;
+    pointer-events: none;
     grid-column: 2;
     grid-row: 1;
     display: grid;
     grid-template: minmax(0, 1fr) / minmax(0, 1fr);
     min-width: 0;
     min-height: 0;
-    transition: transform .3s;
-}
-
-.crate-closed .crate-slide {
-    transform: translateX(100%);
-}
-
-/* one button at a time: the crate only opens while the side panel is closed, and the side panel waits for it */
-.page:not(.crate-closed) .panel-toggle,
-.page:not(.panel-closed) .crate-toggle {
-    visibility: hidden;
+    overflow: clip;
 }
 
 .crate {
@@ -569,21 +527,26 @@ body {
     background-color: black;
     color: white;
     font-family: sans-serif;
-    transition: visibility .3s;
+    pointer-events: auto;
+    transition: transform .3s, visibility .3s;
 }
 
-/* hidden as well as slid away, so nothing in it can be tabbed to */
+/* slid down off the bottom of the screen. hidden as well, so nothing in it can be tabbed to */
 .crate-closed .crate {
+    transform: translateY(100%);
     visibility: hidden;
 }
 
-/* a circle centered on the crate's left edge, like the side panel's button. the side panel's
-   button is on the top or bottom edge, so the two never overlap. the arrow points where the crate will go */
+/* a circle just inside the screen edge the crate comes in from: the bottom, centered under the side panel.
+   it stays put while the crate moves, in the room --toggle-room makes for it. the arrow points where
+   the crate will go. black with a white ring, since it can sit over the cover or the crate */
 .crate-toggle {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    translate: -50% -50%;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    align-self: end;
+    translate: 0 -6px;
+    z-index: 1;
     display: grid;
     place-items: center;
     width: 32px;
@@ -595,12 +558,7 @@ body {
     border-radius: 50%;
     color: white;
     cursor: pointer;
-    transition: background-color .15s, color .15s, translate .3s;
-}
-
-/* the closed crate's edge is the edge of the screen, so this keeps the button just inside it */
-.crate-closed .crate-toggle {
-    translate: -100% -50%;
+    transition: background-color .15s, color .15s;
 }
 
 .crate-toggle:hover {
@@ -617,10 +575,12 @@ body {
     stroke-linecap: round;
     stroke-linejoin: round;
     transition: rotate .3s;
+    /* the arrow is drawn pointing right: turned to point up to open, and down to close */
+    rotate: 90deg;
 }
 
 .crate-closed .crate-toggle svg {
-    rotate: 180deg;
+    rotate: -90deg;
 }
 
 .crate-info {
@@ -775,15 +735,37 @@ body {
     color: #aaa;
 }
 
-/* the side panel's cell on narrow screens. it still slides in from the right */
+/* the side panel's cell on narrow screens: the crate slides in from the right edge of the screen instead,
+   and the button sits just inside that edge, with room made for it */
 @media screen and (max-width: 768px) {
-    .crate-slide {
+    .crate-slide,
+    .crate-toggle {
         grid-column: 1;
         grid-row: 2;
     }
 
-    /* the open crate's left edge is the edge of the screen here too, so this keeps the button just inside it */
-    .page:not(.crate-closed) .crate-toggle {
-        translate: 0 -50%;
+    .crate-closed .crate {
+        transform: translateX(100%);
+    }
+
+    .crate-toggle {
+        justify-self: end;
+        align-self: center;
+        translate: -6px 0;
+    }
+
+    .side-panel,
+    .crate-info,
+    .crate-list {
+        padding-right: var(--toggle-room);
+    }
+
+    /* the arrow points left to open, and right to close */
+    .crate-toggle svg {
+        rotate: 0deg;
+    }
+
+    .crate-closed .crate-toggle svg {
+        rotate: 180deg;
     }
 }

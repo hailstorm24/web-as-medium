@@ -36,14 +36,8 @@ function getChords(ranks) {
 
     ranks.forEach(rank => {
         getAlbumPeople(getAlbum(rank)).forEach(person => {
-            if (!endsByPerson[person.name]) {
-                endsByPerson[person.name] = [];
-            }
-            endsByPerson[person.name].push({
-                rank,
-                color: getPersonColor(person, rank),
-                roles: [...person.roles]
-            });
+            endsByPerson[person.name] ??= [];
+            endsByPerson[person.name].push({ rank });
         });
     });
 
@@ -62,8 +56,8 @@ function getChords(ranks) {
     return chords;
 }
 
-// give every end an angle. each album's ends are grouped by color, and within a color
-// sorted by the direction of their chords, which keeps crossings down
+// give every end an angle. each album's ends are sorted by the direction of their chords,
+// which keeps crossings down
 function placeChordEnds(chords, ranks) {
     const slot = 2 * Math.PI / ranks.length;
     const positions = {};  // rank -> position on the ring
@@ -76,7 +70,7 @@ function placeChordEnds(chords, ranks) {
     // how far clockwise the other album is from this end's album
     function addLink(end, otherEnd) {
         const distance = (positions[otherEnd.rank] - positions[end.rank] + ranks.length) % ranks.length;
-        end.distances = (end.distances || []).concat(distance);
+        (end.distances ??= []).push(distance);
         albumEnds[end.rank].add(end);
     }
     chords.forEach(({ ends: [end, otherEnd] }) => {
@@ -87,9 +81,7 @@ function placeChordEnds(chords, ranks) {
     const average = list => list.reduce((sum, value) => sum + value, 0) / list.length;
 
     ranks.forEach((rank, i) => {
-        const ends = [...albumEnds[rank]].sort((a, b) =>
-            personColors.indexOf(a.color) - personColors.indexOf(b.color)
-            || average(b.distances) - average(a.distances));
+        const ends = [...albumEnds[rank]].sort((a, b) => average(b.distances) - average(a.distances));
 
         const step = Math.min(slot * chordGap, 2 * slot * chordSpread / ends.length);
         const center = ringAngle(i, ranks.length) * Math.PI / 180;
@@ -104,11 +96,12 @@ function chordPoint(end) {
     return [chordRadius * Math.cos(end.angle), chordRadius * Math.sin(end.angle)];
 }
 
-function chordColor(color, saturation, grey) {
-    return `color-mix(in srgb, var(--${color}, white) ${saturation * 100}%, var(${grey}))`;
+// each end is its album's color, --album-[rank], the same as the album's credit tiles
+function chordColor(end, saturation, grey) {
+    return `color-mix(in srgb, var(--album-${end.rank}, white) ${saturation * 100}%, var(${grey}))`;
 }
 
-// a chord whose ends are different colors blends between them
+// a chord's ends are on different albums, so it blends from one album's color to the other's
 function addChordGradient(chord, id) {
     const [[x1, y1], [x2, y2]] = chord.ends.map(chordPoint);
     const gradient = document.createElementNS(svgNS, "linearGradient");
@@ -150,10 +143,7 @@ function drawChords(ranks) {
         chord.path.classList.add("chord");
         chord.path.setAttribute("d", curve);
 
-        if (chord.ends[0].color !== chord.ends[1].color) {
-            addChordGradient(chord, "chord-gradient-" + i);
-        }
-
+        addChordGradient(chord, "chord-gradient-" + i);
         chordLayer.append(chord.path);
 
         // hover text with the person's name
@@ -174,20 +164,12 @@ function chordAt(event) {
     return drawnChords[event.target.dataset.index];
 }
 
-// opens the person on this chord in the panel, the same way clicking a cover opens its album
-function clickChord(chord) {
-    selectPerson(chord.person);
-    setPanelClosed(false);
-}
-
-// listening on the layer, since its paths get replaced in every redraw
-hitLayer.addEventListener("mouseover", event => previewChord(chordAt(event)));
-hitLayer.addEventListener("mouseleave", () => previewChord(null));
-
 // shows this chord's person on the ring, and remembers its albums so a person's view can light up their rows.
 // the redraw moves the hovered path to the top of its tier, which makes the browser fire mouseover on it again,
 // so a chord that's already showing has to be skipped or it redraws forever and swallows the click
 let hoveredChord = null;
+let hoveredChordRanks = [];  // the albums at both ends of the chord the mouse is on, if any
+
 function previewChord(chord = null) {
     if (chord === hoveredChord) {
         return;
@@ -197,18 +179,23 @@ function previewChord(chord = null) {
     hoveredPerson = null;  // so previewPerson redraws even when moving between two of the same person's chords
     previewPerson(chord ? chord.person : null);
 }
-hitLayer.addEventListener("click", event => clickChord(chordAt(event)));
+
+// listening on the layer, since its paths get replaced in every redraw.
+// clicking opens the chord's person in the panel, the same way clicking a cover opens its album,
+// and closes the crate so the panel underneath can be seen
+hitLayer.addEventListener("mouseover", event => previewChord(chordAt(event)));
+hitLayer.addEventListener("mouseleave", () => previewChord(null));
+hitLayer.addEventListener("click", event => {
+    selectPerson(chordAt(event).person);
+    setCrateClosed(true);
+});
 
 function styleChord(chord, style) {
     const [least, most] = style.saturation;
     const saturation = least + chord.similarity * (most - least);
-    if (chord.stops) {
-        chord.stops.forEach((stop, i) => {
-            stop.style.stopColor = chordColor(chord.ends[i].color, saturation, style.grey);
-        });
-    } else {
-        chord.path.style.stroke = chordColor(chord.ends[0].color, saturation, style.grey);
-    }
+    chord.stops.forEach((stop, i) => {
+        stop.style.stopColor = chordColor(chord.ends[i], saturation, style.grey);
+    });
     chord.path.style.strokeOpacity = style.opacity;
 }
 

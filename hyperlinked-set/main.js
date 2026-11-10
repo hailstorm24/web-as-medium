@@ -1,39 +1,22 @@
 let albums = [];      // all 100 albums from albums.json
 let similarityMatrix = null;  // how alike every pair of albums sounds, from albums.json
-let currentRank = 12;  // which album the side panel is showing
+let currentRank = null;  // which album the side panel is showing, if any. with no album or person, it's the about view
 let currentPerson = null;  // whose view the side panel is showing instead of the album's, if anyone's
 let hoveredPerson = null;  // whose chord the mouse is on, if anyone's
 let hoveredRank = null;  // which album's cover (or row in a person's view) the mouse is on, if any
-let hoveredChordRanks = [];  // the albums at both ends of the chord the mouse is on, if any
 let showingAllAlbums = false;  // does a person's view list every album they're on, not just the ones on the ring?
-let showingAll = false;  // has the panel closed with nothing picked since? the selection comes back when it reopens
 
 const page = document.querySelector(".page");
 const sidePanel = document.querySelector(".side-panel");
-const panelToggle = document.querySelector(".panel-toggle");
 
-// the page's grid stays the same, so the record doesn't move when the panel closes
-function setPanelClosed(closed) {
-    page.classList.toggle("panel-closed", closed);
-    panelToggle.setAttribute("aria-expanded", !closed);
-    panelToggle.setAttribute("aria-label", closed ? "Open side panel" : "Close side panel");
-    showingAll = closed;
-    showSelection();
-    if (!closed) {
-        setCrateClosed(true);  // the crate is over the side panel
-    }
-}
-
-panelToggle.addEventListener("click", () => setPanelClosed(!page.classList.contains("panel-closed")));
-
-// load the data, then show the first album
+// load the data, then draw the ring and start on the about view
 fetch("albums.json")
     .then(res => res.json())
     .then(data => {
         albums = data.albums;
         similarityMatrix = data.matrix;
         drawCovers();
-        showAlbum(currentRank);
+        showAbout();
     });
 
 // look up an album by its rank
@@ -45,6 +28,15 @@ function getAlbum(rank) {
 function getSimilarity(rankA, rankB) {
     const { ranks, similarity } = similarityMatrix;
     return similarity[ranks.indexOf(rankA)][ranks.indexOf(rankB)];
+}
+
+// set a css variable on the root, so everything using it picks it up. null goes back to the default
+function setRootColor(name, color) {
+    if (color) {
+        document.documentElement.style.setProperty(name, color);
+    } else {
+        document.documentElement.style.removeProperty(name);
+    }
 }
 
 // the cover urls in albums.json (albumoftheyear.org) block outside sites,
@@ -61,8 +53,7 @@ function saveCover(album, src) {
 }
 
 function getSpotifyCover(album) {
-    const url = "https://open.spotify.com/album/" + album.spotify_album_id;
-    return fetch("https://open.spotify.com/oembed?url=" + url)
+    return fetch("https://open.spotify.com/oembed?url=" + listenServices.spotify.url(album))
         .then(res => res.json())
         .then(data => data.thumbnail_url);
 }
@@ -75,13 +66,13 @@ function getAppleCover(album) {
 
 function getCover(album) {
     if (!coverCache[album.rank]) {
-        if (savedCovers[album.rank]) {
-            coverCache[album.rank] = Promise.resolve(savedCovers[album.rank]);
-        } else if (album.spotify_album_id) {
-            coverCache[album.rank] = getSpotifyCover(album).catch(() => getAppleCover(album)).then(src => saveCover(album, src));
-        } else {
-            coverCache[album.rank] = getAppleCover(album).then(src => saveCover(album, src));
-        }
+        const saved = savedCovers[album.rank];
+        const lookup = album.spotify_album_id
+            ? () => getSpotifyCover(album).catch(() => getAppleCover(album))
+            : () => getAppleCover(album);
+        coverCache[album.rank] = saved
+            ? Promise.resolve(saved)
+            : lookup().then(src => saveCover(album, src));
     }
     return coverCache[album.rank];
 }
@@ -119,9 +110,7 @@ function getAlbumColor(img) {
 
         // similar colors share a group (each channel rounded down to steps of 32)
         const key = (r >> 5) + "," + (g >> 5) + "," + (b >> 5);
-        if (!groups[key]) {
-            groups[key] = { weight: 0, r: 0, g: 0, b: 0, count: 0 };
-        }
+        groups[key] ??= { weight: 0, r: 0, g: 0, b: 0, count: 0 };
         groups[key].weight += weight;
         groups[key].r += r;
         groups[key].g += g;
@@ -155,36 +144,32 @@ function contrastWithBlack(r, g, b) {
 
 const minContrast = 7;
 
+// the smallest amount between low and high that gives [r, g, b] enough contrast once adjusted by it,
+// found by halving the range each step
+function smallestEnough(low, high, adjust) {
+    for (let i = 0; i < 12; i++) {
+        const mid = (low + high) / 2;
+        if (contrastWithBlack(...adjust(mid)) < minContrast) low = mid;
+        else high = mid;
+    }
+    return high;
+}
+
 // brighten a color until it stands out against black.
 // first scale it up, which keeps it just as colorful; if it's still too dark at full
 // brightness (deep blues and purples), mix in just enough white to get there
 function ensureContrast(r, g, b) {
-    const scale = 255 / Math.max(r, g, b, 1);
-    if (contrastWithBlack(r, g, b) < minContrast) {
-        // the smallest scale-up that's enough, found by halving the range each step
-        let low = 1, high = scale;
-        for (let i = 0; i < 12; i++) {
-            const mid = (low + high) / 2;
-            if (contrastWithBlack(r * mid, g * mid, b * mid) < minContrast) low = mid;
-            else high = mid;
-        }
-        r *= high; g *= high; b *= high;
-    }
+    let color = [r, g, b];
+    const scaled = amount => color.map(c => c * amount);
+    const whitened = amount => color.map(c => c + (255 - c) * amount);
 
-    if (contrastWithBlack(r, g, b) < minContrast) {
-        // the smallest amount of white that's enough
-        let low = 0, high = 1;
-        for (let i = 0; i < 12; i++) {
-            const mid = (low + high) / 2;
-            const mix = (c) => c + (255 - c) * mid;
-            if (contrastWithBlack(mix(r), mix(g), mix(b)) < minContrast) low = mid;
-            else high = mid;
-        }
-        const mix = (c) => c + (255 - c) * high;
-        r = mix(r); g = mix(g); b = mix(b);
+    if (contrastWithBlack(...color) < minContrast) {
+        color = scaled(smallestEnough(1, 255 / Math.max(r, g, b, 1), scaled));
     }
-
-    return [r, g, b].map((c) => Math.min(255, Math.ceil(c)));
+    if (contrastWithBlack(...color) < minContrast) {
+        color = whitened(smallestEnough(0, 1, whitened));
+    }
+    return color.map((c) => Math.min(255, Math.ceil(c)));
 }
 
 // read this album's color from its cover, and set it on the root as --album-[rank].
@@ -195,38 +180,31 @@ function loadAlbumColor(album, src) {
     img.addEventListener("load", () => {
         const color = getAlbumColor(img);
         if (color) {
-            document.documentElement.style.setProperty("--album-" + album.rank, color);
+            setRootColor("--album-" + album.rank, color);
         }
     });
     img.src = src;
 }
 
-// the credit categories in albums.json, and how to label them
-const creditCategories = {
-    composition_lyrics: "Writing & Composition",
-    production_engineering: "Production & Engineering",
-    performers: "Performers"
-};
-
-// every color a person can be on an album, in the order they're grouped around the ring.
-// each one is a css variable with the same name in style.css, shared by the tiles and the chords
-const personColors = ["artist", ...Object.keys(creditCategories), "multiple"];
+// the credit categories in albums.json. artist is separate: artists are plain names, the others are { name, role }
+const creditCategories = ["composition_lyrics", "production_engineering", "performers"];
 
 // credits are stored per track, so combine them for the whole album:
-// one entry per person, with the tracks they're on in each category and their roles
-function getAlbumPeople(album) {
-    const people = {};
+// one entry per person, with the tracks they're on in each category and their roles.
+// the data never changes, so each album is only combined once
+const albumPeople = new Map();
 
+function getAlbumPeople(album) {
+    if (albumPeople.has(album)) {
+        return albumPeople.get(album);
+    }
+    const people = {};
     album.tracks.forEach(track => {
-        ["artist", ...Object.keys(creditCategories)].forEach(category => {
+        ["artist", ...creditCategories].forEach(category => {
             track.credits[category].forEach(credit => {
-                const name = credit.name || credit;  // artists are plain names, the others are { name, role }
-                if (!people[name]) {
-                    people[name] = { name, tracks: {}, roles: new Set() };
-                }
-                if (!people[name].tracks[category]) {
-                    people[name].tracks[category] = new Set();
-                }
+                const name = credit.name || credit;
+                people[name] ??= { name, tracks: {}, roles: new Set() };
+                people[name].tracks[category] ??= new Set();
                 people[name].tracks[category].add(track.disc + "-" + track.number);
                 if (credit.role) {
                     people[name].roles.add(credit.role);
@@ -234,41 +212,24 @@ function getAlbumPeople(album) {
             });
         });
     });
-
-    return Object.values(people);
+    albumPeople.set(album, Object.values(people));
+    return albumPeople.get(album);
 }
 
-// one color for this person on this album, so their tile and their chords always match.
-// by album: --album-[rank], set by loadAlbumColor. by connection type: the css variables in personColors
-const colorByAlbum = true;
-
-function getPersonColor(person, rank) {
-    if (colorByAlbum) {
-        return "album-" + rank;
-    }
-    if (person.tracks.artist) {
-        return "artist";
-    }
-    const categories = Object.keys(creditCategories).filter(category => person.tracks[category]);
-    return categories.length === 1 ? categories[0] : "multiple";
+// the number of tracks this person is on, across these categories
+function trackCount(person, categories) {
+    return new Set(categories.flatMap(category => [...(person.tracks[category] || [])])).size;
 }
 
-// the people who get a tile: everyone with a credit, not just an artist name.
-// adds which categories they're in and every track they're on, with the most tracks first
-function getAlbumCredits(album) {
-    return getAlbumPeople(album)
-        .map(person => {
-            const categories = Object.keys(creditCategories).filter(category => person.tracks[category]);
-            const allTracks = new Set(categories.flatMap(category => [...person.tracks[category]]));
-            return { ...person, categories, allTracks };
-        })
-        .filter(credit => credit.categories.length > 0)
-        .sort((a, b) => b.allTracks.size - a.allTracks.size);
-}
-
+// the people who get a tile: everyone with a credit, not just an artist name, with the most tracks first.
+// each tile is the album's color, --album-[rank], the same as its chords
 function creditsList(album) {
-    const items = getAlbumCredits(album).map(c => `
-        <li class="credit" style="--c: var(--${getPersonColor(c, album.rank)}, white)">
+    const items = getAlbumPeople(album)
+        .filter(person => creditCategories.some(category => person.tracks[category]))
+        .map(person => ({ name: person.name, tracks: trackCount(person, creditCategories) }))
+        .sort((a, b) => b.tracks - a.tracks)
+        .map(c => `
+        <li class="credit" style="--c: var(--album-${album.rank}, white)">
             <span class="credit-name">${c.name}</span>
         </li>
     `).join("");
@@ -283,7 +244,6 @@ function tileName(tile) {
 // selects this person and switches the side panel to them
 function selectPerson(name) {
     currentPerson = name;
-    showingAll = false;
     showPerson(name);
     showSelection();
 }
@@ -372,7 +332,6 @@ function listenButton(album) {
 function showAlbum(rank) {
     currentRank = rank;
     currentPerson = null;
-    showingAll = false;
     const album = getAlbum(rank);
 
     sidePanel.innerHTML = `
@@ -390,28 +349,44 @@ function showAlbum(rank) {
     `;
     showSelection();
 
-    // once the cover has loaded, color the main panel from the artwork.
-    // set on the root so everything using --frame-color picks it up
+    // once the cover has loaded, color the main panel from the artwork
     const cover = sidePanel.querySelector(".cover");
-    cover.addEventListener("load", () => {
-        const color = getAlbumColor(cover);
-        if (color) {
-            document.documentElement.style.setProperty("--frame-color", color);
-        } else {
-            document.documentElement.style.removeProperty("--frame-color");  // back to the default
-        }
-    });
-
-    // spin the cover while it's hovered. when the mouse leaves, let it
-    // finish the turn it's on so it stops upright instead of tilted
-    cover.addEventListener("mouseenter", () => cover.classList.add("spinning"));
-    cover.addEventListener("animationiteration", () => {
-        if (!cover.matches(":hover")) {
-            cover.classList.remove("spinning");
-        }
-    });
+    cover.addEventListener("load", () => setRootColor("--frame-color", getAlbumColor(cover)));
 
     loadCovers();
+}
+
+// the about view: nothing is selected, so the whole ring is in color, and the panel says what the diagram is
+function isAboutView() {
+    return currentRank === null && currentPerson === null;
+}
+
+function showAbout() {
+    currentRank = null;
+    currentPerson = null;
+    setRootColor("--frame-color", null);
+
+    sidePanel.innerHTML = `
+        <div class="about-info">
+            <h2>liner notes</h2>
+            <p class="about-text">
+                This project catalogs Rolling Stone's Best Albums of the 2020s, exploring how collaborations
+                influence similarities across the music industry.
+            </p>
+            <p class="about-text">
+                The chord diagram shows shared credits across albums; chords are drawn to connect each pair of
+                albums that share a given contributor. Chords are colored by album and saturated by similarity;
+                brighter chords connect more similar albums, computed according to methodology outlined in
+                Logan &amp; Salomon's "A Music Similarity Function Based on Signal Analysis".
+            </p>
+            <p class="about-text">
+                Use the side panel to add or remove albums from the ring. Select chords to traverse the graph
+                by individual or covers to view contributors by album.
+            </p>
+        </div>
+    `;
+    sidePanel.scrollTop = 0;
+    showSelection();
 }
 
 // every album this person is on, with what they did on it, by rank
@@ -424,7 +399,7 @@ function getPersonAlbums(name) {
 
 function personAlbumRow({ album, person }) {
     const roles = [...(person.tracks.artist ? ["Artist"] : []), ...person.roles];
-    const tracks = new Set(Object.values(person.tracks).flatMap(set => [...set])).size;
+    const tracks = trackCount(person, Object.keys(person.tracks));
     return `
         <li class="person-album" data-rank="${album.rank}"
             style="--c: var(--album-${album.rank}, white)">
@@ -443,7 +418,7 @@ function personAlbumRow({ album, person }) {
 // with the toggle
 function showPerson(name) {
     const allEntries = getPersonAlbums(name);
-    const ringEntries = allEntries.filter(entry => ringRanks.includes(entry.album.rank));
+    const ringEntries = allEntries.filter(entry => onRing(entry.album.rank));
     const entries = showingAllAlbums ? allEntries : ringEntries;
     // no toggle when every one of their albums is already on the ring
     const toggle = ringEntries.length === allEntries.length ? "" : `

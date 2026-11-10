@@ -15,10 +15,6 @@ const sorters = {
 };
 let crateSort = { key: "date", descending: false };
 
-function onRing(rank) {
-    return ringRanks.includes(rank);
-}
-
 // "November 7, 2025" in albums.json, shortened to "Nov 7, 2025"
 function shortDate(releaseDate) {
     return new Date(releaseDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -107,12 +103,10 @@ function updateCrate() {
 }
 
 // the side panel moves along the ring if its album is the one leaving.
-// an empty ring leaves it where it is, until an album is added
+// an empty ring leaves it where it is, until an album is added. the about view and a person's view stay
 function setRing(ranks) {
-    if (ranks.length && !ranks.includes(currentRank)) {
-        const wasShowingAll = showingAll;
+    if (currentRank !== null && ranks.length && !ranks.includes(currentRank)) {
         showAlbum(ranks.find(rank => rank > currentRank) ?? ranks[0]);
-        showingAll = wasShowingAll;
     }
     drawCovers(ranks);
     updateCrate();

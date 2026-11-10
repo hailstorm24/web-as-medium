@@ -6,6 +6,10 @@ const numAlbums = 50;
 // change this (or call drawCovers with a different list) to show a different set
 let ringRanks = Array.from({ length: numAlbums }, (_, i) => i + 1);  // [1, 2, ..., numAlbums]
 
+function onRing(rank) {
+    return ringRanks.includes(rank);
+}
+
 // sizes are in viewBox units: the ring's viewBox runs from -380 to 380,
 // so (0, 0) is the center and 380 is the edge of the circle
 const ringEdge = 380 - 6;  // leave a little gap inside the edge
@@ -61,7 +65,7 @@ function drawCovers(ranks = ringRanks) {
         image.addEventListener("mouseleave", () => previewAlbum(null));
         image.addEventListener("click", () => {
             showAlbum(album.rank);
-            setPanelClosed(false);
+            setCrateClosed(true);  // so the panel underneath can be seen
         });
 
         group.append(image);
@@ -71,30 +75,36 @@ function drawCovers(ranks = ringRanks) {
     showSelection();
 }
 
+// the ? button in the corner opens the about view
+document.querySelector(".about-toggle").addEventListener("click", () => {
+    showAbout();
+    setCrateClosed(true);  // so the panel underneath can be seen
+});
+
 // make the ring and the side panel match what's selected: an album, or a person in a person's view.
 // the selection's chords are in focus. hovering narrows to what's hovered, with the selection's other
 // chords kept as context: a person on an album, or an album in a person's view.
 // a person with no chords has nothing to show, so the whole ring goes grey.
-// while showingAll, nothing is selected, so every chord and cover is in color until something's hovered
+// in the about view, nothing is selected, so every chord and cover is in color until something's hovered
 function showSelection() {
-    const personView = !showingAll && currentPerson;
+    const aboutView = isAboutView();
     const noChords = hoveredPerson && !hasChords(hoveredPerson);
-    const everything = showingAll && !hoveredPerson && !hoveredRank;
+    const everything = aboutView && !hoveredPerson && !hoveredRank;
 
     const inFocus = chord => {
         if (hoveredPerson) {
             return chord.person === hoveredPerson;
         }
-        if (personView) {
+        if (currentPerson) {
             return chord.person === currentPerson && (!hoveredRank || chordTouches(chord, hoveredRank));
         }
         return everything || chordTouches(chord, hoveredRank ?? currentRank);
     };
     const inContext = chord => {
-        if (showingAll || noChords) {
+        if (aboutView || noChords) {
             return false;
         }
-        return personView ? chord.person === currentPerson : chordTouches(chord, currentRank);
+        return currentPerson ? chord.person === currentPerson : chordTouches(chord, currentRank);
     };
 
     highlightChords(chord => {
@@ -108,9 +118,9 @@ function showSelection() {
     const linkedRanks = new Set(drawnChords.filter(inFocus).flatMap(chord => chord.ends.map(end => end.rank)));
     ring.querySelectorAll(".ring-cover").forEach(image => {
         const rank = Number(image.dataset.rank);
-        image.classList.toggle("current", !showingAll && !personView && rank === currentRank);
+        image.classList.toggle("current", !currentPerson && rank === currentRank);
         image.classList.toggle("hovered", rank === hoveredRank);  // from a row in a person's view
-        image.classList.toggle("linked", linkedRanks.has(rank) || everything);  // even with no chords
+        image.classList.toggle("linked", linkedRanks.has(rank) || everything);
     });
 
     sidePanel.querySelectorAll(".credit").forEach(tile => {
